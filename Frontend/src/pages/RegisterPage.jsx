@@ -64,7 +64,7 @@ const RegisterPage = () => {
       if (!formData.password || formData.password.length < 6) newErrors.password = true;
       if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = true;
       
-      const allowedRoles = ['athlete', 'coach', 'club', 'viewer'];
+      const allowedRoles = ['athlete', 'coach', 'club'];
       if (!formData.role || !allowedRoles.includes(formData.role)) {
         newErrors.role = 'Please select a valid role';
       }
@@ -247,7 +247,6 @@ const RegisterPage = () => {
                         <option value="athlete">Athlete</option>
                         <option value="coach">Coach</option>
                         <option value="club">Club</option>
-                        <option value="viewer">Event Viewer</option>
                       </select>
                       {errors.role && <p className="text-red-500 text-[10px] font-bold uppercase ml-1">{errors.role}</p>}
                     </div>

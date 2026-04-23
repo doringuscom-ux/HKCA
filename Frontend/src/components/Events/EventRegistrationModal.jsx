@@ -70,8 +70,7 @@ const EventRegistrationModal = ({ event, onClose, onDashboardUpdate, initialRole
   const roles = [
     { id: 'athlete', title: 'Athlete', icon: RiUserHeartLine, color: 'blue', desc: 'Participate as a competitor' },
     { id: 'coach', title: 'Coach', icon: RiTeamLine, color: 'emerald', desc: 'Join as official faculty' },
-    { id: 'club', title: 'Club', icon: RiBuilding2Line, color: 'purple', desc: 'Represent your organization' },
-    { id: 'spectator', title: 'Spectator', icon: RiEyeLine, color: 'amber', desc: 'Watch & follow the event' }
+    { id: 'club', title: 'Club', icon: RiBuilding2Line, color: 'purple', desc: 'Represent your organization' }
   ];
 
   const validateCoupon = async () => {
@@ -90,8 +89,7 @@ const EventRegistrationModal = ({ event, onClose, onDashboardUpdate, initialRole
   };
 
   const getFinalPrice = () => {
-    const pricingKey = role === 'spectator' ? 'spectator' : role;
-    const basePrice = Number(event.pricing?.[pricingKey]) || 0;
+    const basePrice = Number(event.pricing?.[role]) || 0;
 
     if (!appliedCoupon) return basePrice;
 
@@ -356,12 +354,6 @@ const EventRegistrationModal = ({ event, onClose, onDashboardUpdate, initialRole
                             const userRole = backendUser?.role?.toLowerCase();
                             const itemId = item.id.toLowerCase();
 
-                            // If guest, show all options (though they shouldn't see this anymore)
-                            if (!user) return true;
-
-                            // Spectator is always an option
-                            if (itemId === 'spectator') return true;
-
                             // If user has a specific role (athlete, coach, club), strictly show only that
                             if (['athlete', 'coach', 'club'].includes(userRole)) {
                               return itemId === userRole;
@@ -371,7 +363,7 @@ const EventRegistrationModal = ({ event, onClose, onDashboardUpdate, initialRole
                             return true;
                           })
                           .map((item) => {
-                            const price = event.pricing?.[item.id === 'spectator' ? 'spectator' : item.id] || 0;
+                            const price = event.pricing?.[item.id] || 0;
                             return (
                               <button
                                 key={item.id}
@@ -470,12 +462,12 @@ const EventRegistrationModal = ({ event, onClose, onDashboardUpdate, initialRole
                       <div className="space-y-4">
                         <div className="flex justify-between text-xs sm:text-sm font-bold text-slate-500">
                           <span>Base Fee ({role})</span>
-                          <span>₹{event.pricing?.[role === 'spectator' ? 'spectator' : role] || 0}</span>
+                          <span>₹{event.pricing?.[role] || 0}</span>
                         </div>
                         {appliedCoupon && (
                           <div className="flex justify-between text-xs sm:text-sm font-bold text-emerald-600 italic">
                             <span>Discount ({appliedCoupon.code})</span>
-                            <span>-₹{(Number(event.pricing?.[role === 'spectator' ? 'spectator' : role]) || 0) - getFinalPrice()}</span>
+                            <span>-₹{(Number(event.pricing?.[role]) || 0) - getFinalPrice()}</span>
                           </div>
                         )}
                         <div className="pt-4 border-t border-blue-200 flex justify-between items-end">

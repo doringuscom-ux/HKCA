@@ -50,8 +50,7 @@ const ManageEvents = () => {
   const [pricing, setPricing] = useState({
     athlete: 200,
     coach: 500,
-    club: 5000,
-    spectator: 100
+    club: 5000
   });
   const [duration, setDuration] = useState('');
   const [mapUrl, setMapUrl] = useState('');
@@ -158,8 +157,7 @@ const ManageEvents = () => {
     setPricing({
       athlete: 200,
       coach: 500,
-      club: 5000,
-      spectator: 100
+      club: 5000
     });
     setDuration('');
     setMapUrl('');
@@ -184,8 +182,7 @@ const ManageEvents = () => {
     setPricing(event.pricing || {
       athlete: 200,
       coach: 500,
-      club: 5000,
-      spectator: 100
+      club: 5000
     });
     setDuration(event.duration || '');
     setMapUrl(event.mapUrl || '');
@@ -474,15 +471,6 @@ const ManageEvents = () => {
                     className="block w-full rounded-xl border-gray-200 bg-gray-50 p-3 text-sm focus:bg-white focus:border-blue-600 outline-none border"
                   />
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Viewer / Spectator</label>
-                  <input
-                    type="number"
-                    value={pricing.spectator}
-                    onChange={(e) => setPricing({ ...pricing, spectator: e.target.value })}
-                    className="block w-full rounded-xl border-gray-200 bg-gray-50 p-3 text-sm focus:bg-white focus:border-blue-600 outline-none border"
-                  />
-                </div>
               </div>
             </div>
 
@@ -646,7 +634,6 @@ const ManageEvents = () => {
                     <option value="athlete">Athlete</option>
                     <option value="coach">Coach</option>
                     <option value="club">Club</option>
-                    <option value="spectator">Spectator</option>
                   </select>
                   <select 
                     className="bg-white border border-slate-200 rounded-2xl px-6 py-4 font-bold outline-none focus:border-blue-500 transition-all text-xs appearance-none cursor-pointer"

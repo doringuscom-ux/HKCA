@@ -37,7 +37,6 @@ const eventSchema = new mongoose.Schema({
     athlete: { type: Number, default: 200 },
     coach: { type: Number, default: 500 },
     club: { type: Number, default: 5000 },
-    spectator: { type: Number, default: 100 },
   },
   duration: {
     type: String,

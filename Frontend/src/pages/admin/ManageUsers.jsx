@@ -862,8 +862,21 @@ const ManageUsers = () => {
                       </div>
                     </div>
                   </td>
-                  
-                   <td className="px-6 py-5">
+
+                  <td className="px-6 py-5">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                        <RiMailLine size={14} className="text-slate-400" />
+                        {user.email}
+                      </div>
+                      <div className="flex items-center gap-2 text-[11px] font-black text-slate-500 uppercase tracking-wider">
+                        <RiPhoneLine size={14} className="text-slate-400" />
+                        {user.contactInfo?.phone || user.personalInfo?.phone || 'No Phone'}
+                      </div>
+                    </div>
+                  </td>
+
+                  <td className="px-6 py-5">
                     {user.isVerified ? (
                       <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">
                         <RiCheckDoubleLine size={14} /> Verified
@@ -898,7 +911,6 @@ const ManageUsers = () => {
                       <option value="athlete">Athlete</option>
                       <option value="coach">Coach</option>
                       <option value="club">Club</option>
-                      <option value="viewer">Viewer</option>
                     </select>
                   </td>
 

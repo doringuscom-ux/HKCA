@@ -8,9 +8,9 @@ const User = require('../models/User');
 router.post('/register', async (req, res, next) => {
   const { username, email, password, role, clubInfo, personalInfo, guardianInfo, contactInfo, documents } = req.body;
 
-  const allowedRoles = ['athlete', 'coach', 'club', 'viewer'];
+  const allowedRoles = ['athlete', 'coach', 'club'];
   if (!role || !allowedRoles.includes(role)) {
-    return res.status(400).json({ message: 'Invalid role selected. Please select Athlete, Coach, Club, or Viewer.' });
+    return res.status(400).json({ message: 'Invalid role selected. Please select Athlete, Coach, or Club.' });
   }
 
   try {
@@ -27,7 +27,7 @@ router.post('/register', async (req, res, next) => {
     // Check personalInfo.phone or contactInfo.phone
     const phone = personalInfo?.phone || contactInfo?.phone;
     if (phone) {
-      const phoneExists = await User.findOne({ 
+      const phoneExists = await User.findOne({
         $or: [
           { 'personalInfo.phone': phone },
           { 'contactInfo.phone': phone }
@@ -55,7 +55,7 @@ router.post('/register', async (req, res, next) => {
       req.session.userId = user._id;
       req.session.save((err) => {
         if (err) return res.status(500).json({ message: 'Session save error' });
-        
+
         // Return full user object for immediate profile access
         const userObj = user.toObject();
         delete userObj.password;
@@ -83,7 +83,7 @@ router.put('/profile', async (req, res, next) => {
     // Check phone uniqueness if phone is being updated
     const newPhone = req.body.personalInfo?.phone || req.body.contactInfo?.phone;
     if (newPhone) {
-      const phoneExists = await User.findOne({ 
+      const phoneExists = await User.findOne({
         $or: [
           { 'personalInfo.phone': newPhone },
           { 'contactInfo.phone': newPhone }
@@ -97,12 +97,12 @@ router.put('/profile', async (req, res, next) => {
 
     // Update fields if provided — verification status is NOT touched here
     // Only admin can change verificationStatus / isVerified
-    if (req.body.clubInfo)      user.clubInfo      = req.body.clubInfo;
-    if (req.body.personalInfo)  user.personalInfo  = req.body.personalInfo;
-    if (req.body.guardianInfo)  user.guardianInfo  = req.body.guardianInfo;
-    if (req.body.contactInfo)   user.contactInfo   = req.body.contactInfo;
-    if (req.body.documents)     user.documents     = req.body.documents;
-    if (req.body.achievements)  user.achievements  = req.body.achievements;
+    if (req.body.clubInfo) user.clubInfo = req.body.clubInfo;
+    if (req.body.personalInfo) user.personalInfo = req.body.personalInfo;
+    if (req.body.guardianInfo) user.guardianInfo = req.body.guardianInfo;
+    if (req.body.contactInfo) user.contactInfo = req.body.contactInfo;
+    if (req.body.documents) user.documents = req.body.documents;
+    if (req.body.achievements) user.achievements = req.body.achievements;
 
     const updatedUser = await user.save();
     const userObj = updatedUser.toObject();
@@ -120,15 +120,15 @@ router.post('/login', async (req, res, next) => {
   const { username, password } = req.body; // Can be email or username
 
   try {
-    const user = await User.findOne({ 
-      $or: [{ username }, { email: username }] 
+    const user = await User.findOne({
+      $or: [{ username }, { email: username }]
     }).select('+password');
 
     if (user && (await user.matchPassword(password))) {
       req.session.userId = user._id;
       req.session.save((err) => {
         if (err) return res.status(500).json({ message: 'Session save error' });
-        
+
         // Return full user object for immediate profile access
         const userObj = user.toObject();
         delete userObj.password;
@@ -250,8 +250,8 @@ router.post('/forgot-password-request', async (req, res, next) => {
   const { identity } = req.body; // username or email
 
   try {
-    const user = await User.findOne({ 
-      $or: [{ username: identity }, { email: identity }] 
+    const user = await User.findOne({
+      $or: [{ username: identity }, { email: identity }]
     });
 
     if (!user) return res.status(404).json({ message: 'User not found' });
@@ -281,8 +281,8 @@ router.post('/forgot-password-reset', async (req, res, next) => {
   const { identity, otp, newPassword } = req.body;
 
   try {
-    const user = await User.findOne({ 
-      $or: [{ username: identity }, { email: identity }] 
+    const user = await User.findOne({
+      $or: [{ username: identity }, { email: identity }]
     });
 
     if (!user) return res.status(404).json({ message: 'User not found' });
