@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
+const GlobalSettings = require('../models/GlobalSettings');
+const RegistrationCode = require('../models/RegistrationCode');
+const crypto = require('crypto');
 
 // @desc    Register a new user (Athlete/Coach/Club)
 // @route   POST /api/auth/register
@@ -8,9 +11,9 @@ const User = require('../models/User');
 router.post('/register', async (req, res, next) => {
   const { username, email, password, role, clubInfo, personalInfo, guardianInfo, contactInfo, documents } = req.body;
 
-  const allowedRoles = ['athlete', 'coach', 'club', 'viewer'];
+  const allowedRoles = ['athlete', 'coach', 'club'];
   if (!role || !allowedRoles.includes(role)) {
-    return res.status(400).json({ message: 'Invalid role selected. Please select Athlete, Coach, Club, or Viewer.' });
+    return res.status(400).json({ message: 'Invalid role selected. Please select Athlete, Coach, or Club.' });
   }
 
   try {
@@ -27,7 +30,7 @@ router.post('/register', async (req, res, next) => {
     // Check personalInfo.phone or contactInfo.phone
     const phone = personalInfo?.phone || contactInfo?.phone;
     if (phone) {
-      const phoneExists = await User.findOne({ 
+      const phoneExists = await User.findOne({
         $or: [
           { 'personalInfo.phone': phone },
           { 'contactInfo.phone': phone }
@@ -36,6 +39,87 @@ router.post('/register', async (req, res, next) => {
       if (phoneExists) {
         return res.status(400).json({ message: 'Phone number already registered. Please login or use a different number.' });
       }
+    }
+
+    const { paymentDetails, registrationCode } = req.body;
+    let finalPaymentData = {
+      paymentStatus: 'unpaid',
+      paymentMethod: 'online'
+    };
+
+    // Check if fee is required
+    let settings = await GlobalSettings.findOne();
+    if (!settings) {
+      // Initialize default settings if not exists
+      settings = await GlobalSettings.create({
+        registrationFees: { athlete: 0, coach: 0, club: 0 }
+      });
+    }
+    const requiredFee = settings.registrationFees[role] || 0;
+
+    if (requiredFee > 0) {
+      if (registrationCode) {
+        // Handle Offline Code
+        const codeDoc = await RegistrationCode.findOne({ 
+          code: registrationCode.toUpperCase(), 
+          email: email.toLowerCase(),
+          role,
+          isUsed: false 
+        });
+
+        if (!codeDoc) {
+          return res.status(400).json({ message: 'Invalid or already used registration code for this email/role.' });
+        }
+
+        finalPaymentData = {
+          paymentStatus: 'paid',
+          paymentMethod: 'offline',
+          isFeeReceived: true,
+          registrationPayment: {
+            registrationCode: registrationCode.toUpperCase(),
+            amount: requiredFee,
+            paidAt: new Date()
+          }
+        };
+        
+        // Mark code as used
+        codeDoc.isUsed = true;
+        await codeDoc.save();
+      } else if (paymentDetails) {
+        // Handle Online Payment
+        const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = paymentDetails;
+        
+        // Verify signature
+        const shasum = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
+        shasum.update(`${razorpay_order_id}|${razorpay_payment_id}`);
+        const digest = shasum.digest('hex');
+
+        if (digest !== razorpay_signature) {
+          return res.status(400).json({ message: 'Payment verification failed. Transaction not legitimate.' });
+        }
+
+        finalPaymentData = {
+          paymentStatus: 'paid',
+          paymentMethod: 'online',
+          isFeeReceived: true,
+          registrationPayment: {
+            razorpayOrderId: razorpay_order_id,
+            razorpayPaymentId: razorpay_payment_id,
+            razorpaySignature: razorpay_signature,
+            amount: requiredFee,
+            paidAt: new Date()
+          }
+        };
+      } else {
+        return res.status(400).json({ message: `Registration fee of ₹${requiredFee} is required to join as ${role}.` });
+      }
+    } else {
+      // Fee is 0
+      finalPaymentData = {
+        paymentStatus: 'paid',
+        paymentMethod: 'manual',
+        isFeeReceived: true
+      };
     }
 
     const user = await User.create({
@@ -48,14 +132,20 @@ router.post('/register', async (req, res, next) => {
       guardianInfo,
       contactInfo,
       documents,
-      isRegistered: true
+      isRegistered: true,
+      ...finalPaymentData
     });
+
+    if (user && registrationCode) {
+      // Update code with user ID
+      await RegistrationCode.findOneAndUpdate({ code: registrationCode.toUpperCase() }, { usedBy: user._id });
+    }
 
     if (user) {
       req.session.userId = user._id;
       req.session.save((err) => {
         if (err) return res.status(500).json({ message: 'Session save error' });
-        
+
         // Return full user object for immediate profile access
         const userObj = user.toObject();
         delete userObj.password;
@@ -83,7 +173,7 @@ router.put('/profile', async (req, res, next) => {
     // Check phone uniqueness if phone is being updated
     const newPhone = req.body.personalInfo?.phone || req.body.contactInfo?.phone;
     if (newPhone) {
-      const phoneExists = await User.findOne({ 
+      const phoneExists = await User.findOne({
         $or: [
           { 'personalInfo.phone': newPhone },
           { 'contactInfo.phone': newPhone }
@@ -97,12 +187,12 @@ router.put('/profile', async (req, res, next) => {
 
     // Update fields if provided — verification status is NOT touched here
     // Only admin can change verificationStatus / isVerified
-    if (req.body.clubInfo)      user.clubInfo      = req.body.clubInfo;
-    if (req.body.personalInfo)  user.personalInfo  = req.body.personalInfo;
-    if (req.body.guardianInfo)  user.guardianInfo  = req.body.guardianInfo;
-    if (req.body.contactInfo)   user.contactInfo   = req.body.contactInfo;
-    if (req.body.documents)     user.documents     = req.body.documents;
-    if (req.body.achievements)  user.achievements  = req.body.achievements;
+    if (req.body.clubInfo) user.clubInfo = req.body.clubInfo;
+    if (req.body.personalInfo) user.personalInfo = req.body.personalInfo;
+    if (req.body.guardianInfo) user.guardianInfo = req.body.guardianInfo;
+    if (req.body.contactInfo) user.contactInfo = req.body.contactInfo;
+    if (req.body.documents) user.documents = req.body.documents;
+    if (req.body.achievements) user.achievements = req.body.achievements;
 
     const updatedUser = await user.save();
     const userObj = updatedUser.toObject();
@@ -120,15 +210,15 @@ router.post('/login', async (req, res, next) => {
   const { username, password } = req.body; // Can be email or username
 
   try {
-    const user = await User.findOne({ 
-      $or: [{ username }, { email: username }] 
+    const user = await User.findOne({
+      $or: [{ username }, { email: username }]
     }).select('+password');
 
     if (user && (await user.matchPassword(password))) {
       req.session.userId = user._id;
       req.session.save((err) => {
         if (err) return res.status(500).json({ message: 'Session save error' });
-        
+
         // Return full user object for immediate profile access
         const userObj = user.toObject();
         delete userObj.password;
@@ -250,8 +340,8 @@ router.post('/forgot-password-request', async (req, res, next) => {
   const { identity } = req.body; // username or email
 
   try {
-    const user = await User.findOne({ 
-      $or: [{ username: identity }, { email: identity }] 
+    const user = await User.findOne({
+      $or: [{ username: identity }, { email: identity }]
     });
 
     if (!user) return res.status(404).json({ message: 'User not found' });
@@ -281,8 +371,8 @@ router.post('/forgot-password-reset', async (req, res, next) => {
   const { identity, otp, newPassword } = req.body;
 
   try {
-    const user = await User.findOne({ 
-      $or: [{ username: identity }, { email: identity }] 
+    const user = await User.findOne({
+      $or: [{ username: identity }, { email: identity }]
     });
 
     if (!user) return res.status(404).json({ message: 'User not found' });

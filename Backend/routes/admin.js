@@ -11,10 +11,12 @@ const Coupon = require('../models/Coupon');
 const Publication = require('../models/Publication');
 const Asset = require('../models/Asset');
 const ContactInquiry = require('../models/ContactInquiry');
+const GlobalSettings = require('../models/GlobalSettings');
+const RegistrationCode = require('../models/RegistrationCode');
 
 // Multer storage configuration
 const storage = multer.memoryStorage();
-const upload = multer({ 
+const upload = multer({
   storage,
   limits: { fileSize: 25 * 1024 * 1024 } // 25MB limit
 });
@@ -23,8 +25,8 @@ const upload = multer({
 const uploadToCloudinary = (fileBuffer, folder = 'hkca', resourceType = 'auto') => {
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
-      { 
-        folder, 
+      {
+        folder,
         resource_type: resourceType,
         access_mode: 'public',
         type: 'upload' // Ensures public delivery
@@ -170,7 +172,7 @@ router.post('/assets', protect, adminGuard, upload.single('image'), async (req, 
     }
 
     const result = await uploadToCloudinary(req.file.buffer, 'hkca/assets');
-    
+
     const newAsset = await Asset.create({
       title: title || req.file.originalname,
       url: result.secure_url,
@@ -289,8 +291,7 @@ router.post('/events', protect, adminGuard, upload.single('image'), async (req, 
     let pricing = {
       athlete: 200,
       coach: 500,
-      club: 5000,
-      spectator: 100
+      club: 5000
     };
 
     if (req.body.pricing) {
@@ -561,7 +562,7 @@ router.get('/events/:id/registrations', protect, adminGuard, async (req, res) =>
     const registrations = await EventRegistration.find({ event: req.params.id })
       .populate('user', '-password') // Populate full user profile but exclude password
       .sort({ registrationDate: -1 });
-    
+
     console.log(`Found ${registrations.length} registrations`);
     res.json(registrations);
   } catch (error) {
@@ -582,19 +583,19 @@ router.put('/registrations/:id/status', protect, adminGuard, async (req, res) =>
     }
 
     registration.status = status;
-    
+
     // Update cancellation details if status is cancelled
     if (status === 'cancelled') {
-        if (cancellationReason !== undefined) registration.cancellationReason = cancellationReason;
-        if (allowReapply !== undefined) registration.allowReapply = allowReapply;
+      if (cancellationReason !== undefined) registration.cancellationReason = cancellationReason;
+      if (allowReapply !== undefined) registration.allowReapply = allowReapply;
     } else {
-        // Reset cancellation reason and reapply status if status changed back to something else
-        registration.cancellationReason = '';
-        registration.allowReapply = false;
+      // Reset cancellation reason and reapply status if status changed back to something else
+      registration.cancellationReason = '';
+      registration.allowReapply = false;
     }
 
     const updatedRegistration = await registration.save();
-    
+
     res.json(updatedRegistration);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -628,10 +629,10 @@ router.put('/users/:id/role', protect, adminGuard, async (req, res) => {
 
     user.role = role;
     const updatedUser = await user.save();
-    
+
     const userObj = updatedUser.toObject();
     delete userObj.password;
-    
+
     res.json(userObj);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -647,7 +648,7 @@ router.put('/users/:id/verify', protect, adminGuard, async (req, res) => {
     user.verificationStatus = status;
     user.isVerified = (status === 'verified');
     if (message) user.adminMessage = message;
-    
+
     await user.save();
     res.json({ message: `User status updated to ${status}`, user });
   } catch (error) {
@@ -659,22 +660,22 @@ router.put('/users/:id/verify', protect, adminGuard, async (req, res) => {
 // @route   PUT /api/admin/users/:id/message
 // @access  Private (Admin only)
 router.put('/users/:id/message', protect, adminGuard, async (req, res) => {
-    const { message, unlock } = req.body;
-    try {
-        const user = await User.findById(req.params.id);
-        if (!user) return res.status(404).json({ message: 'User not found' });
+  const { message, unlock } = req.body;
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
 
-        if (message !== undefined) user.adminMessage = message;
-        if (unlock) {
-            user.isVerified = false;
-            user.verificationStatus = 'pending';
-        }
-
-        await user.save();
-        res.json({ message: 'Message sent to user', user });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+    if (message !== undefined) user.adminMessage = message;
+    if (unlock) {
+      user.isVerified = false;
+      user.verificationStatus = 'pending';
     }
+
+    await user.save();
+    res.json({ message: 'Message sent to user', user });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 // @desc    Admin Edit User Profile (Any field)
@@ -693,7 +694,7 @@ router.put('/users/:id/profile', protect, adminGuard, async (req, res) => {
     if (req.body.documents) user.documents = req.body.documents;
     if (req.body.role) user.role = req.body.role;
     if (req.body.achievements) user.achievements = req.body.achievements;
-    
+
     // If admin edits, we keep user verified unless explicitly changed
     if (req.body.isVerified !== undefined) user.isVerified = req.body.isVerified;
     if (req.body.verificationStatus) user.verificationStatus = req.body.verificationStatus;
@@ -715,9 +716,115 @@ router.delete('/users/:id', protect, adminGuard, async (req, res) => {
 
     // Also delete their registrations to cleanup
     await EventRegistration.deleteMany({ user: req.params.id });
-    
+
     await user.deleteOne();
     res.json({ message: 'User and their registrations deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Update if registration fee received manually
+// @route   PUT /api/admin/users/:id/fee-received
+// @access  Private (Admin only)
+router.put('/users/:id/fee-received', protect, adminGuard, async (req, res) => {
+  const { isFeeReceived } = req.body;
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    user.isFeeReceived = isFeeReceived;
+    if (isFeeReceived) {
+      user.paymentStatus = 'paid';
+    }
+    await user.save();
+    res.json({ message: 'User fee status updated', isFeeReceived: user.isFeeReceived });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// --- Global Settings & Registration Fee Routes ---
+
+// @desc    Get registration fees
+// @route   GET /api/admin/settings/registration-fees
+// @access  Public
+router.get('/settings/registration-fees', async (req, res) => {
+  try {
+    let settings = await GlobalSettings.findOne();
+    if (!settings) {
+      // Create default settings if not found
+      settings = await GlobalSettings.create({
+        registrationFees: { athlete: 0, coach: 0, club: 0 }
+      });
+    }
+    res.json(settings.registrationFees);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Update registration fees
+// @route   PUT /api/admin/settings/registration-fees
+// @access  Private (Admin only)
+router.put('/settings/registration-fees', protect, adminGuard, async (req, res) => {
+  const { athlete, coach, club } = req.body;
+  try {
+    let settings = await GlobalSettings.findOne();
+    if (!settings) {
+      settings = new GlobalSettings();
+    }
+    settings.registrationFees = { athlete, coach, club };
+    await settings.save();
+    res.json(settings.registrationFees);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// --- Registration Code Management ---
+
+// @desc    Generate a registration code
+// @route   POST /api/admin/registration-codes
+// @access  Private (Admin only)
+router.post('/registration-codes', protect, adminGuard, async (req, res) => {
+  const { email, role } = req.body;
+  try {
+    // Generate a simple unique code
+    const code = Math.random().toString(36).substring(2, 10).toUpperCase();
+    
+    const newCode = await RegistrationCode.create({
+      code,
+      email,
+      role,
+      generatedBy: req.user._id
+    });
+    
+    res.status(201).json(newCode);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Get all registration codes
+// @route   GET /api/admin/registration-codes
+// @access  Private (Admin only)
+router.get('/registration-codes', protect, adminGuard, async (req, res) => {
+  try {
+    const codes = await RegistrationCode.find().sort({ createdAt: -1 });
+    res.json(codes);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Delete a registration code
+// @route   DELETE /api/admin/registration-codes/:id
+// @access  Private (Admin only)
+router.delete('/registration-codes/:id', protect, adminGuard, async (req, res) => {
+  try {
+    await RegistrationCode.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Code deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -808,7 +915,7 @@ router.get('/reports/daily', protect, adminGuard, async (req, res) => {
     // For standard aggregation, we'll use the server's local day range
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
-    
+
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
 
@@ -834,10 +941,10 @@ router.get('/reports/daily', protect, adminGuard, async (req, res) => {
     const todayRegistrations = await EventRegistration.find({
       registrationDate: { $gte: startOfDay, $lte: endOfDay }
     })
-    .populate('user', 'username email personalInfo')
-    .populate('event', 'title pricing') // Added pricing
-    .populate('couponUsed', 'code')
-    .sort({ registrationDate: -1 });
+      .populate('user', 'username email personalInfo')
+      .populate('event', 'title pricing') // Added pricing
+      .populate('couponUsed', 'code')
+      .sort({ registrationDate: -1 });
 
     const result = {
       summary: stats[0] || { totalRegistrations: 0, totalRevenue: 0, totalDiscounts: 0 },

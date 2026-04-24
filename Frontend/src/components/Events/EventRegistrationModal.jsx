@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  RiCloseLine, 
-  RiUserHeartLine, 
-  RiTeamLine, 
-  RiBuilding2Line, 
+import {
+  RiCloseLine,
+  RiUserHeartLine,
+  RiTeamLine,
+  RiBuilding2Line,
   RiEyeLine,
   RiArrowRightLine,
   RiLoader4Line,
@@ -60,7 +60,7 @@ const EventRegistrationModal = ({ event, onClose, onDashboardUpdate, initialRole
     };
     getLatestRole();
   }, [user]);
-  
+
   // Payment & Coupon State
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
@@ -70,8 +70,7 @@ const EventRegistrationModal = ({ event, onClose, onDashboardUpdate, initialRole
   const roles = [
     { id: 'athlete', title: 'Athlete', icon: RiUserHeartLine, color: 'blue', desc: 'Participate as a competitor' },
     { id: 'coach', title: 'Coach', icon: RiTeamLine, color: 'emerald', desc: 'Join as official faculty' },
-    { id: 'club', title: 'Club', icon: RiBuilding2Line, color: 'purple', desc: 'Represent your organization' },
-    { id: 'spectator', title: 'Spectator', icon: RiEyeLine, color: 'amber', desc: 'Watch & follow the event' }
+    { id: 'club', title: 'Club', icon: RiBuilding2Line, color: 'purple', desc: 'Represent your organization' }
   ];
 
   const validateCoupon = async () => {
@@ -90,18 +89,17 @@ const EventRegistrationModal = ({ event, onClose, onDashboardUpdate, initialRole
   };
 
   const getFinalPrice = () => {
-    const pricingKey = role === 'spectator' ? 'spectator' : role;
-    const basePrice = Number(event.pricing?.[pricingKey]) || 0;
-    
+    const basePrice = Number(event.pricing?.[role]) || 0;
+
     if (!appliedCoupon) return basePrice;
-    
+
     let discountedAmount = basePrice;
     if (appliedCoupon.discountType === 'fixed') {
       discountedAmount = basePrice - Number(appliedCoupon.discountValue);
     } else {
       discountedAmount = basePrice - (basePrice * (Number(appliedCoupon.discountValue) / 100));
     }
-    
+
     // Ensure minimum ₹1 for paid roles
     if (basePrice > 0) {
       return Math.max(1, Math.round(discountedAmount));
@@ -114,7 +112,7 @@ const EventRegistrationModal = ({ event, onClose, onDashboardUpdate, initialRole
       setError('Please select a participation role');
       return;
     }
-    
+
     // For logged in users, check verification
     if (user) {
       const validation = validateProfileCompletion(user);
@@ -163,7 +161,7 @@ const EventRegistrationModal = ({ event, onClose, onDashboardUpdate, initialRole
 
       // 4. Open Razorpay Checkout
       const options = {
-        key: keyId || 'rzp_test_YOUR_KEY_ID', 
+        key: keyId || 'rzp_test_YOUR_KEY_ID',
         amount: amount,
         currency: 'INR',
         name: 'HKCA Portal',
@@ -203,10 +201,10 @@ const EventRegistrationModal = ({ event, onClose, onDashboardUpdate, initialRole
           color: '#2563eb',
         },
         modal: {
-            ondismiss: () => {
-                setLoading(false);
-                setError('Payment cancelled by user. Registration not confirmed.');
-            }
+          ondismiss: () => {
+            setLoading(false);
+            setError('Payment cancelled by user. Registration not confirmed.');
+          }
         }
       };
 
@@ -220,14 +218,14 @@ const EventRegistrationModal = ({ event, onClose, onDashboardUpdate, initialRole
       }
 
       const rzp = new window.Razorpay(options);
-      
+
       rzp.on('payment.failed', async function (response) {
         console.error('Payment Failed Event:', response.error);
         await api.post('/payment/verify', {
-            razorpay_order_id: response.error.metadata.order_id,
-            razorpay_payment_id: response.error.metadata.payment_id,
-            registrationId,
-            status: 'failed'
+          razorpay_order_id: response.error.metadata.order_id,
+          razorpay_payment_id: response.error.metadata.payment_id,
+          registrationId,
+          status: 'failed'
         });
         setError(`Payment failed: ${response.error.description}`);
         setLoading(false);
@@ -259,10 +257,10 @@ const EventRegistrationModal = ({ event, onClose, onDashboardUpdate, initialRole
           <p className="text-slate-500 font-medium mb-10 leading-relaxed">
             You have successfully joined <strong>{event.title}</strong> as a {role}. See you at the venue!
           </p>
-          <button 
+          <button
             onClick={() => {
-                if (onDashboardUpdate) onDashboardUpdate();
-                onClose();
+              if (onDashboardUpdate) onDashboardUpdate();
+              onClose();
             }}
             className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl"
           >
@@ -277,7 +275,7 @@ const EventRegistrationModal = ({ event, onClose, onDashboardUpdate, initialRole
     <div className="fixed inset-0 z-100 flex items-center justify-center p-2 sm:p-4 bg-slate-900/95 backdrop-blur-xl overflow-y-auto pt-10 pb-10 sm:pt-20 sm:pb-20">
       <div className="bg-white rounded-3xl sm:rounded-[3rem] w-full max-w-4xl relative animate-fade-in-up">
         {/* Close Button */}
-        <button 
+        <button
           onClick={onClose}
           className="absolute top-8 right-8 p-3 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-500 transition-colors z-20"
         >
@@ -289,7 +287,7 @@ const EventRegistrationModal = ({ event, onClose, onDashboardUpdate, initialRole
           <div className="lg:col-span-2 bg-slate-50 p-6 sm:p-8 lg:p-12 border-b lg:border-b-0 lg:border-r border-slate-100 rounded-t-3xl sm:rounded-t-[3rem] lg:rounded-t-0 lg:rounded-l-[3rem]">
             <span className="text-blue-600 font-black uppercase tracking-[0.3em] text-[10px] mb-4 block">Joining Event</span>
             <h2 className="text-3xl font-black text-slate-900 mb-6 leading-tight">{event.title}</h2>
-            
+
             <div className="space-y-6 pt-6 border-t border-slate-200">
               <div>
                 <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">Date</p>
@@ -332,7 +330,7 @@ const EventRegistrationModal = ({ event, onClose, onDashboardUpdate, initialRole
                     <h4 className="text-3xl font-black text-slate-900 uppercase tracking-tighter italic">Login <span className="text-blue-600">First.</span></h4>
                     <p className="text-slate-500 font-bold text-sm max-w-[280px] leading-relaxed">You need to be an HKCA member to participate in events. Please sign in or create an account.</p>
                   </div>
-                  <button 
+                  <button
                     onClick={() => navigate('/login')}
                     className="px-12 py-5 bg-slate-900 text-white rounded-3xl font-black uppercase tracking-[0.3em] text-[11px] shadow-2xl shadow-slate-200 hover:bg-blue-600 hover:-translate-y-1 active:scale-95 transition-all"
                   >
@@ -352,49 +350,42 @@ const EventRegistrationModal = ({ event, onClose, onDashboardUpdate, initialRole
                         </div>
                       ) : (
                         roles
-                        .filter(item => {
-                          const userRole = backendUser?.role?.toLowerCase();
-                          const itemId = item.id.toLowerCase();
+                          .filter(item => {
+                            const userRole = backendUser?.role?.toLowerCase();
+                            const itemId = item.id.toLowerCase();
 
-                          // If guest, show all options (though they shouldn't see this anymore)
-                          if (!user) return true;
-                          
-                          // Spectator is always an option
-                          if (itemId === 'spectator') return true;
+                            // If user has a specific role (athlete, coach, club), strictly show only that
+                            if (['athlete', 'coach', 'club'].includes(userRole)) {
+                              return itemId === userRole;
+                            }
 
-                          // If user has a specific role (athlete, coach, club), strictly show only that
-                          if (['athlete', 'coach', 'club'].includes(userRole)) {
-                            return itemId === userRole;
-                          }
-
-                          // If user role is "admin" or unknown ("user"), show everything for safety
-                          return true;
-                        })
-                        .map((item) => {
-                          const price = event.pricing?.[item.id === 'spectator' ? 'spectator' : item.id] || 0;
-                          return (
-                            <button
-                              key={item.id}
-                              onClick={() => setRole(item.id)}
-                              className={`group p-5 rounded-3xl border-2 text-left transition-all duration-300 ${
-                                role === item.id 
-                                ? `border-${item.color}-500 bg-${item.color}-50 bg-opacity-30 shadow-lg shadow-${item.color}-500/10` 
-                                : 'border-slate-100 hover:border-slate-200 bg-slate-50/50'
-                              }`}
-                            >
-                              <div className="flex justify-between items-start mb-4">
-                                <item.icon size={28} className={role === item.id ? `text-${item.color}-600` : 'text-slate-300'} />
-                                <span className="text-xs font-black text-slate-800 bg-white px-2 py-0.5 rounded-lg shadow-xs">₹{price}</span>
-                              </div>
-                              <p className={`font-black text-sm uppercase tracking-wider mb-1 ${role === item.id ? 'text-slate-900' : 'text-slate-400'}`}>
-                                {item.title}
-                              </p>
-                              <p className="text-[10px] text-slate-400 font-medium leading-tight line-clamp-1">
-                                {item.desc}
-                              </p>
-                            </button>
-                          );
-                        })
+                            // If user role is "admin" or unknown ("user"), show everything for safety
+                            return true;
+                          })
+                          .map((item) => {
+                            const price = event.pricing?.[item.id] || 0;
+                            return (
+                              <button
+                                key={item.id}
+                                onClick={() => setRole(item.id)}
+                                className={`group p-5 rounded-3xl border-2 text-left transition-all duration-300 ${role === item.id
+                                    ? `border-${item.color}-500 bg-${item.color}-50 bg-opacity-30 shadow-lg shadow-${item.color}-500/10`
+                                    : 'border-slate-100 hover:border-slate-200 bg-slate-50/50'
+                                  }`}
+                              >
+                                <div className="flex justify-between items-start mb-4">
+                                  <item.icon size={28} className={role === item.id ? `text-${item.color}-600` : 'text-slate-300'} />
+                                  <span className="text-xs font-black text-slate-800 bg-white px-2 py-0.5 rounded-lg shadow-xs">₹{price}</span>
+                                </div>
+                                <p className={`font-black text-sm uppercase tracking-wider mb-1 ${role === item.id ? 'text-slate-900' : 'text-slate-400'}`}>
+                                  {item.title}
+                                </p>
+                                <p className="text-[10px] text-slate-400 font-medium leading-tight line-clamp-1">
+                                  {item.desc}
+                                </p>
+                              </button>
+                            );
+                          })
                       )}
                     </div>
                   </div>
@@ -404,16 +395,16 @@ const EventRegistrationModal = ({ event, onClose, onDashboardUpdate, initialRole
                     <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 ml-1">2. Have a Coupon?</label>
                     <div className="flex gap-3">
                       <div className="relative flex-1">
-                        <input 
-                          type="text" 
+                        <input
+                          type="text"
                           placeholder="Enter promo code"
-                          className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 font-bold outline-none focus:bg-white focus:border-blue-500 transition-all uppercase tracking-widest disabled:opacity-50"
+                          className="w-full bg-slate-50 text-slate-900 border border-slate-100 rounded-2xl p-4 font-bold outline-none focus:bg-white focus:border-blue-500 transition-all uppercase tracking-widest disabled:opacity-50"
                           value={couponCode}
                           onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                           disabled={appliedCoupon}
                         />
                         {appliedCoupon && (
-                          <button 
+                          <button
                             onClick={() => { setAppliedCoupon(null); setCouponCode(''); }}
                             className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-red-500 hover:bg-red-50 rounded-full"
                           >
@@ -422,7 +413,7 @@ const EventRegistrationModal = ({ event, onClose, onDashboardUpdate, initialRole
                         )}
                       </div>
                       {!appliedCoupon && (
-                        <button 
+                        <button
                           onClick={validateCoupon}
                           disabled={!couponCode || validatingCoupon}
                           className="px-6 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-blue-600 transition-all disabled:opacity-50"
@@ -433,9 +424,9 @@ const EventRegistrationModal = ({ event, onClose, onDashboardUpdate, initialRole
                     </div>
                     {appliedCoupon && (
                       <p className="mt-2 text-[11px] font-bold text-emerald-600 flex items-center gap-1 ml-1 animate-fadeIn">
-                        <RiCheckDoubleLine size={16} /> 
-                        {appliedCoupon.discountType === 'fixed' 
-                          ? `₹${appliedCoupon.discountValue} discount applied!` 
+                        <RiCheckDoubleLine size={16} />
+                        {appliedCoupon.discountType === 'fixed'
+                          ? `₹${appliedCoupon.discountValue} discount applied!`
                           : `${appliedCoupon.discountValue}% discount applied!`}
                       </p>
                     )}
@@ -453,66 +444,66 @@ const EventRegistrationModal = ({ event, onClose, onDashboardUpdate, initialRole
                   {/* Summary Step 2 */}
                   <div className="space-y-8 animate-fade-in">
                     <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Review Your Registration</label>
-                    
+
                     <div className="bg-slate-50 rounded-[2.5rem] p-8 border border-slate-100">
                       <div className="flex justify-between items-center mb-6">
-                         <div className="flex flex-col">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Participation As</span>
-                            <span className="text-xl font-black text-slate-900 uppercase italic tracking-wider">{role}</span>
-                         </div>
-                         <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-blue-600 shadow-sm">
-                           {roles.find(r => r.id === role)?.icon({ size: 24 })}
-                         </div>
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Participation As</span>
+                          <span className="text-xl font-black text-slate-900 uppercase italic tracking-wider">{role}</span>
+                        </div>
+                        <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-blue-600 shadow-sm">
+                          {roles.find(r => r.id === role)?.icon({ size: 24 })}
+                        </div>
                       </div>
                     </div>
 
                     <div className="bg-blue-600/5 rounded-3xl sm:rounded-[2.5rem] p-6 sm:p-8 border border-blue-100">
-                       <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-6 block">Payment Summary</span>
-                       <div className="space-y-4">
-                          <div className="flex justify-between text-xs sm:text-sm font-bold text-slate-500">
-                             <span>Base Fee ({role})</span>
-                             <span>₹{event.pricing?.[role === 'spectator' ? 'spectator' : role] || 0}</span>
+                      <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-6 block">Payment Summary</span>
+                      <div className="space-y-4">
+                        <div className="flex justify-between text-xs sm:text-sm font-bold text-slate-500">
+                          <span>Base Fee ({role})</span>
+                          <span>₹{event.pricing?.[role] || 0}</span>
+                        </div>
+                        {appliedCoupon && (
+                          <div className="flex justify-between text-xs sm:text-sm font-bold text-emerald-600 italic">
+                            <span>Discount ({appliedCoupon.code})</span>
+                            <span>-₹{(Number(event.pricing?.[role]) || 0) - getFinalPrice()}</span>
                           </div>
-                          {appliedCoupon && (
-                             <div className="flex justify-between text-xs sm:text-sm font-bold text-emerald-600 italic">
-                                <span>Discount ({appliedCoupon.code})</span>
-                                <span>-₹{(Number(event.pricing?.[role === 'spectator' ? 'spectator' : role]) || 0) - getFinalPrice()}</span>
-                             </div>
-                          )}
-                          <div className="pt-4 border-t border-blue-200 flex justify-between items-end">
-                             <span className="text-[10px] sm:text-xs font-black text-slate-900 uppercase tracking-widest">Total to Pay</span>
-                             <span className="text-2xl sm:text-3xl font-black text-blue-600 tracking-tighter">₹{getFinalPrice()}</span>
-                          </div>
-                       </div>
+                        )}
+                        <div className="pt-4 border-t border-blue-200 flex justify-between items-end">
+                          <span className="text-[10px] sm:text-xs font-black text-slate-900 uppercase tracking-widest">Total to Pay</span>
+                          <span className="text-2xl sm:text-3xl font-black text-blue-600 tracking-tighter">₹{getFinalPrice()}</span>
+                        </div>
+                      </div>
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-4">
-                       <button 
-                         onClick={() => setStep(1)}
-                         disabled={loading}
-                         className="flex-1 py-6 bg-slate-100 text-slate-400 rounded-3xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-200 transition-all flex items-center justify-center gap-2"
-                       >
-                         <RiArrowLeftLine /> Back
-                       </button>
-                       <button
-                         disabled={loading || paymentLoading || (event.registrationDeadline && new Date() > new Date(event.registrationDeadline))}
-                         onClick={handleRegister}
-                         className="flex-[2] py-6 bg-slate-900 text-white rounded-3xl font-black uppercase tracking-[0.2em] text-[11px] shadow-2xl shadow-slate-200 hover:bg-blue-600 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-3"
-                       >
-                         {(loading || paymentLoading) ? <RiLoader4Line className="animate-spin" size={20} /> : 
-                         (event.registrationDeadline && new Date() > new Date(event.registrationDeadline)) ? (
-                         <>Registration Closed</>
-                         ) : (
-                         <>
-                             Confirm & Pay Now <RiMoneyDollarCircleLine size={20} />
-                         </>
-                         )}
-                       </button>
+                      <button
+                        onClick={() => setStep(1)}
+                        disabled={loading}
+                        className="flex-1 py-6 bg-slate-100 text-slate-400 rounded-3xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-200 transition-all flex items-center justify-center gap-2"
+                      >
+                        <RiArrowLeftLine /> Back
+                      </button>
+                      <button
+                        disabled={loading || paymentLoading || (event.registrationDeadline && new Date() > new Date(event.registrationDeadline))}
+                        onClick={handleRegister}
+                        className="flex-[2] py-6 bg-slate-900 text-white rounded-3xl font-black uppercase tracking-[0.2em] text-[11px] shadow-2xl shadow-slate-200 hover:bg-blue-600 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+                      >
+                        {(loading || paymentLoading) ? <RiLoader4Line className="animate-spin" size={20} /> :
+                          (event.registrationDeadline && new Date() > new Date(event.registrationDeadline)) ? (
+                            <>Registration Closed</>
+                          ) : (
+                            <>
+                              Confirm & Pay Now <RiMoneyDollarCircleLine size={20} />
+                            </>
+                          )}
+                      </button>
                     </div>
                   </div>
                 </>
               )}
-              
+
               <p className="text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-8">
                 By registering, you agree to HKCA terms & regulations.
               </p>

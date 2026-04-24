@@ -6,6 +6,14 @@ const GalleryContent = () => {
   const [gallery, setGallery] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [filter, setFilter] = useState('image');
+
+  const filteredGallery = gallery.filter(item => {
+    if (filter === 'all') return true;
+    if (filter === 'image') return item.type !== 'video';
+    if (filter === 'video') return item.type === 'video';
+    return true;
+  });
 
   useEffect(() => {
     const fetchGallery = async () => {
@@ -23,19 +31,19 @@ const GalleryContent = () => {
 
   const handleNext = useCallback((e) => {
     if (e) e.stopPropagation();
-    if (!selectedImage || gallery.length === 0) return;
-    const currentIndex = gallery.findIndex(item => item._id === selectedImage._id);
-    const nextIndex = (currentIndex + 1) % gallery.length;
-    setSelectedImage(gallery[nextIndex]);
-  }, [selectedImage, gallery]);
+    if (!selectedImage || filteredGallery.length === 0) return;
+    const currentIndex = filteredGallery.findIndex(item => item._id === selectedImage._id);
+    const nextIndex = (currentIndex + 1) % filteredGallery.length;
+    setSelectedImage(filteredGallery[nextIndex]);
+  }, [selectedImage, filteredGallery]);
 
   const handlePrev = useCallback((e) => {
     if (e) e.stopPropagation();
-    if (!selectedImage || gallery.length === 0) return;
-    const currentIndex = gallery.findIndex(item => item._id === selectedImage._id);
-    const prevIndex = (currentIndex - 1 + gallery.length) % gallery.length;
-    setSelectedImage(gallery[prevIndex]);
-  }, [selectedImage, gallery]);
+    if (!selectedImage || filteredGallery.length === 0) return;
+    const currentIndex = filteredGallery.findIndex(item => item._id === selectedImage._id);
+    const prevIndex = (currentIndex - 1 + filteredGallery.length) % filteredGallery.length;
+    setSelectedImage(filteredGallery[prevIndex]);
+  }, [selectedImage, filteredGallery]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -78,11 +86,31 @@ const GalleryContent = () => {
     <>
       <section className="bg-[#131b23] py-12 md:py-24 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
-          {gallery.length === 0 ? (
-            <div className="text-center text-gray-400 italic py-12">No gallery items found.</div>
+          {/* Filter Buttons */}
+          <div className="flex flex-wrap justify-center gap-3 md:gap-4 mb-10 md:mb-16">
+            {[
+              { id: 'image', label: 'Images' },
+              { id: 'video', label: 'Videos' }
+            ].map((f) => (
+              <button
+                key={f.id}
+                onClick={() => setFilter(f.id)}
+                className={`px-5 md:px-8 py-2 md:py-3 rounded-full text-[10px] md:text-xs font-black uppercase tracking-[0.2em] transition-all duration-500 border ${
+                  filter === f.id 
+                    ? 'bg-blue-600 border-blue-500 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)] scale-105' 
+                    : 'bg-[#1a242f] border-gray-800 text-gray-400 hover:text-white hover:border-gray-600'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+
+          {filteredGallery.length === 0 ? (
+            <div className="text-center text-gray-400 italic py-12">No items found for this category.</div>
           ) : (
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-8">
-              {gallery.map((item) => (
+              {filteredGallery.map((item) => (
                 <div 
                   key={item._id} 
                   onClick={() => setSelectedImage(item)}
@@ -191,9 +219,9 @@ const GalleryContent = () => {
                 <span className="text-blue-500">{selectedImage.category}</span>
                 <span className="text-gray-600">•</span>
                 <div className="flex gap-1.5 text-gray-400">
-                  <span>{gallery.findIndex(item => item._id === selectedImage._id) + 1}</span>
+                  <span>{filteredGallery.findIndex(item => item._id === selectedImage._id) + 1}</span>
                   <span className="opacity-30">/</span>
-                  <span>{gallery.length}</span>
+                  <span>{filteredGallery.length}</span>
                 </div>
               </div>
             </div>

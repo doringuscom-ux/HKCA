@@ -11,8 +11,12 @@ import {
   RiEyeLine,
   RiEyeOffLine,
   RiLockLine,
-  RiLoader4Line
+  RiLoader4Line,
+  RiMoneyDollarCircleLine,
+  RiQrCodeLine,
+  RiBankCardLine
 } from 'react-icons/ri';
+import api from '../api/apiConfig';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -37,10 +41,29 @@ const RegisterPage = () => {
     }
   });
 
+  const [registrationFees, setRegistrationFees] = useState({ athlete: 0, coach: 0, club: 0 });
+  const [paymentMethod, setPaymentMethod] = useState('online'); // 'online' or 'offline'
+  const [regCode, setRegCode] = useState('');
+  const [paymentDetails, setPaymentDetails] = useState(null);
+
+  // Fetch Registration Fees
+  React.useEffect(() => {
+    const fetchFees = async () => {
+      try {
+        const { data } = await api.get('/admin/settings/registration-fees');
+        setRegistrationFees(data);
+      } catch (err) {
+        console.error('Error fetching fees:', err);
+      }
+    };
+    fetchFees();
+  }, []);
+
   const steps = [
     { id: 1, title: 'Account', icon: RiUserLine },
-    { id: 2, title: 'Basic Information', icon: RiUserLine },
-    { id: 3, title: 'Final Review', icon: RiShieldCheckLine },
+    { id: 2, title: 'Information', icon: RiClipboardLine },
+    { id: 3, title: 'Review', icon: RiShieldCheckLine },
+    { id: 4, title: 'Payment', icon: RiMoneyDollarCircleLine },
   ];
 
   const handleInputChange = (section, field, value) => {
@@ -64,7 +87,7 @@ const RegisterPage = () => {
       if (!formData.password || formData.password.length < 6) newErrors.password = true;
       if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = true;
       
-      const allowedRoles = ['athlete', 'coach', 'club', 'viewer'];
+      const allowedRoles = ['athlete', 'coach', 'club'];
       if (!formData.role || !allowedRoles.includes(formData.role)) {
         newErrors.role = 'Please select a valid role';
       }
@@ -80,7 +103,7 @@ const RegisterPage = () => {
 
   const handleNext = () => {
     if (validateStep(currentStep)) {
-      if (currentStep < 3) {
+      if (currentStep < 4) {
         setCurrentStep(prev => prev + 1);
         window.scrollTo(0, 0);
       } else {
@@ -107,7 +130,8 @@ const RegisterPage = () => {
         password: formData.password,
         role: formData.role,
         personalInfo: formData.personalInfo,
-        // Detailed data will be filled in Profile later
+        paymentDetails,
+        registrationCode: regCode,
         isRegistered: true
       };
 
@@ -154,13 +178,13 @@ const RegisterPage = () => {
                   const Icon = step.icon;
                   return (
                     <div key={step.id} className="relative z-10 flex flex-col items-center">
-                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-xl ${
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-xl ${
                         currentStep === step.id ? 'bg-blue-600 text-white scale-110 shadow-blue-500/20' : 
                         currentStep > step.id ? 'bg-emerald-500 text-white' : 'bg-slate-900 text-slate-500 border border-slate-800'
                       }`}>
-                        {currentStep > step.id ? <RiShieldCheckLine size={24} /> : <Icon size={24} />}
+                        {currentStep > step.id ? <RiShieldCheckLine size={20} /> : <Icon size={20} />}
                       </div>
-                      <span className={`absolute -bottom-8 whitespace-nowrap text-[10px] font-black uppercase tracking-widest transition-colors duration-500 ${
+                      <span className={`absolute -bottom-8 whitespace-nowrap text-[8px] font-black uppercase tracking-widest transition-colors duration-500 ${
                         currentStep === step.id ? 'text-blue-400' : 'text-slate-500'
                       }`}>
                         {step.title}
@@ -247,7 +271,6 @@ const RegisterPage = () => {
                         <option value="athlete">Athlete</option>
                         <option value="coach">Coach</option>
                         <option value="club">Club</option>
-                        <option value="viewer">Event Viewer</option>
                       </select>
                       {errors.role && <p className="text-red-500 text-[10px] font-bold uppercase ml-1">{errors.role}</p>}
                     </div>
@@ -348,6 +371,127 @@ const RegisterPage = () => {
                   </div>
                 )}
 
+                {/* --- Step 4: Payment & Verification --- */}
+                {currentStep === 4 && (
+                  <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-700">
+                    <div className="bg-slate-900/50 rounded-4xl p-10 border border-slate-800 backdrop-blur-3xl">
+                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
+                        <div>
+                          <h3 className="text-2xl font-black text-white mb-2">Registration Fee</h3>
+                          <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">Selected Role: <span className="text-blue-500">{formData.role}</span></p>
+                        </div>
+                        <div className="text-4xl font-black text-white bg-blue-500/10 px-8 py-4 rounded-3xl border border-blue-500/20">
+                          ₹{registrationFees[formData.role] || 0}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <button
+                          type="button"
+                          onClick={() => setPaymentMethod('online')}
+                          className={`flex items-center gap-4 p-6 rounded-3xl border transition-all ${
+                            paymentMethod === 'online' 
+                            ? 'bg-blue-600 border-blue-400 text-white shadow-xl shadow-blue-500/20' 
+                            : 'bg-[#0d1117] border-slate-800 text-slate-500 hover:border-slate-700'
+                          }`}
+                        >
+                          <RiBankCardLine size={24} />
+                          <div className="text-left">
+                            <p className="font-black text-xs uppercase tracking-widest">Pay Online</p>
+                            <p className="text-[10px] opacity-60">Credit/Debit Card, UPI, Netbanking</p>
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setPaymentMethod('offline')}
+                          className={`flex items-center gap-4 p-6 rounded-3xl border transition-all ${
+                            paymentMethod === 'offline' 
+                            ? 'bg-emerald-600 border-emerald-400 text-white shadow-xl shadow-emerald-500/20' 
+                            : 'bg-[#0d1117] border-slate-800 text-slate-500 hover:border-slate-700'
+                          }`}
+                        >
+                          <RiQrCodeLine size={24} />
+                          <div className="text-left">
+                            <p className="font-black text-xs uppercase tracking-widest">Offline Code</p>
+                            <p className="text-[10px] opacity-60">Enter code for cash payments</p>
+                          </div>
+                        </button>
+                      </div>
+
+                      {paymentMethod === 'offline' && (
+                        <div className="mt-8 space-y-4 animate-in fade-in slide-in-from-top-2">
+                          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Registration Code</label>
+                          <input 
+                            type="text" 
+                            placeholder="ENTER CODE" 
+                            className="w-full bg-[#0d1117] border border-slate-800 text-white px-8 py-5 rounded-3xl outline-none focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 transition-all font-black text-center tracking-[0.5em] uppercase"
+                            value={regCode}
+                            onChange={(e) => setRegCode(e.target.value)}
+                          />
+                          <p className="text-[10px] text-slate-500 text-center font-medium">Please enter the code provided by the HKCA Admin for your email: <span className="text-slate-300">{formData.email}</span></p>
+                        </div>
+                      )}
+
+                      {paymentMethod === 'online' && !paymentDetails && (
+                        <div className="mt-8 text-center animate-in fade-in slide-in-from-top-2">
+                           <button
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                setIsSubmitting(true);
+                                const { data } = await api.post('/payment/create-registration-order', {
+                                  role: formData.role,
+                                  email: formData.email
+                                });
+
+                                const options = {
+                                  key: data.keyId,
+                                  amount: data.amount,
+                                  currency: "INR",
+                                  name: "HKCA Portal",
+                                  description: `Registration Fee for ${formData.role}`,
+                                  order_id: data.orderId,
+                                  handler: function (response) {
+                                    setPaymentDetails(response);
+                                  },
+                                  prefill: {
+                                    name: `${formData.personalInfo.firstName} ${formData.personalInfo.lastName}`,
+                                    email: formData.email,
+                                  },
+                                  theme: {
+                                    color: "#2563eb",
+                                  },
+                                };
+
+                                const rzp = new window.Razorpay(options);
+                                rzp.open();
+                              } catch (err) {
+                                alert(err.response?.data?.message || 'Error creating payment order');
+                              } finally {
+                                setIsSubmitting(false);
+                              }
+                            }}
+                            className="px-10 py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-3xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-xl shadow-blue-500/20"
+                           >
+                             Initialize Payment
+                           </button>
+                        </div>
+                      )}
+
+                      {paymentMethod === 'online' && paymentDetails && (
+                        <div className="mt-8 flex items-center gap-4 bg-emerald-500/10 p-6 rounded-3xl border border-emerald-500/20 animate-in zoom-in-95">
+                           <RiShieldCheckLine className="text-emerald-500" size={32} />
+                           <div>
+                             <p className="text-emerald-500 font-black text-xs uppercase tracking-widest">Payment Verified</p>
+                             <p className="text-emerald-500/70 text-[10px] font-bold">Transaction ID: {paymentDetails.razorpay_payment_id}</p>
+                           </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* --- Navigation Buttons --- */}
                 <div className="flex flex-col sm:flex-row justify-between items-center pt-16 gap-6">
                   {currentStep > 1 ? (
@@ -361,18 +505,18 @@ const RegisterPage = () => {
                   
                   <button 
                     onClick={handleNext}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || (currentStep === 4 && paymentMethod === 'online' && !paymentDetails && registrationFees[formData.role] > 0)}
                     className={`w-full sm:w-auto flex items-center justify-center gap-4 px-16 py-6 rounded-4xl font-black text-[13px] uppercase tracking-[0.3em] transition-all shadow-2xl active:scale-95 group ${
-                        currentStep === 3 ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/20'
-                    } text-white`}
+                        currentStep === 4 ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/20'
+                    } text-white ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
                   >
                     {isSubmitting ? (
                       <>
-                        <RiLoader4Line className="animate-spin text-white" /> Creating Account...
+                        <RiLoader4Line className="animate-spin text-white" /> {currentStep === 4 ? 'Finalizing...' : 'Processing...'}
                       </>
                     ) : (
                       <>
-                        {currentStep === 3 ? 'Complete Registration' : 'Continue'} <RiArrowRightLine className="group-hover:translate-x-1 transition-transform" />
+                        {currentStep === 4 ? 'Complete Registration' : 'Continue'} <RiArrowRightLine className="group-hover:translate-x-1 transition-transform" />
                       </>
                     )}
                   </button>

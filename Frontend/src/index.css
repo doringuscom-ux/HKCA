@@ -4,3 +4,18 @@
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --font-heading: "Outfit", sans-serif;
 }
+
+@layer base {
+  input, textarea, select {
+    @apply text-slate-900;
+  }
+}
+
+@layer utilities {
+  .animate-bounce-slow {
+    animation: bounce 3s infinite;
+  }
+  .animate-pulse-subtle {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+}
