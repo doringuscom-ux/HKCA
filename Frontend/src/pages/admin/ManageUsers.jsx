@@ -24,7 +24,8 @@ import {
   RiKeyLine,
   RiTrophyLine,
   RiAddLine,
-  RiEditLine
+  RiEditLine,
+  RiMoneyDollarCircleLine
 } from 'react-icons/ri';
 
 const DetailSection = ({ title, children, icon: Icon }) => (
@@ -721,6 +722,18 @@ const ManageUsers = () => {
     }
   };
 
+  const handleToggleFee = async (userId, isFeeReceived) => {
+    setUpdateLoading(userId);
+    try {
+      await api.put(`/admin/users/${userId}/fee-received`, { isFeeReceived });
+      setUsers(users.map(u => u._id === userId ? { ...u, isFeeReceived, paymentStatus: isFeeReceived ? 'paid' : u.paymentStatus } : u));
+    } catch (err) {
+      alert('Failed to update fee status: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setUpdateLoading(null);
+    }
+  };
+
   const handleDeleteUser = async (userId) => {
     if (!window.confirm('Are you sure you want to PERMANENTLY delete this user and all their registrations? This action cannot be undone.')) {
       return;
@@ -834,6 +847,7 @@ const ManageUsers = () => {
                 <th className="px-6 py-5 whitespace-nowrap">User Profile</th>
                 <th className="px-6 py-5 whitespace-nowrap">Contact Info</th>
                 <th className="px-6 py-5 whitespace-nowrap">Verification</th>
+                <th className="px-6 py-5 whitespace-nowrap">Payment</th>
                 <th className="px-6 py-5 whitespace-nowrap">System Role</th>
                 <th className="px-6 py-5 whitespace-nowrap text-right">Actions</th>
               </tr>
@@ -891,6 +905,23 @@ const ManageUsers = () => {
                         {user.verificationStatus === 'rejected' ? 'Rejected' : 'Pending'}
                       </span>
                     )}
+                  </td>
+
+                  <td className="px-6 py-5">
+                    <div className="flex items-center gap-2">
+                       <button
+                        onClick={() => handleToggleFee(user._id, !user.isFeeReceived)}
+                        disabled={updateLoading === user._id}
+                        className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all flex items-center gap-2 ${
+                          user.isFeeReceived 
+                          ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
+                          : 'bg-slate-50 text-slate-400 border-slate-100 grayscale hover:grayscale-0'
+                        }`}
+                      >
+                        {user.isFeeReceived ? <RiCheckDoubleLine size={12} /> : <RiMoneyDollarCircleLine size={12} />}
+                        {user.isFeeReceived ? 'Received' : 'Mark Received'}
+                      </button>
+                    </div>
                   </td>
 
                   <td className="px-6 py-5">

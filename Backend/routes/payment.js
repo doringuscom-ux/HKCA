@@ -6,6 +6,7 @@ const Event = require('../models/Event');
 const EventRegistration = require('../models/EventRegistration');
 const Coupon = require('../models/Coupon');
 const { protect } = require('../middleware/auth');
+const GlobalSettings = require('../models/GlobalSettings');
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -199,6 +200,46 @@ router.post('/verify', protect, async (req, res) => {
     await registration.save();
     res.json({ success: true, status: registration.status });
   } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Create Razorpay order for Registration Fee
+// @route   POST /api/payment/create-registration-order
+// @access  Public (User not created yet)
+router.post('/create-registration-order', async (req, res) => {
+  const { role, email } = req.body;
+
+  try {
+    let settings = await GlobalSettings.findOne();
+    if (!settings) {
+      settings = await GlobalSettings.create({
+        registrationFees: { athlete: 0, coach: 0, club: 0 }
+      });
+    }
+    const fee = settings.registrationFees[role] || 0;
+
+    if (fee <= 0) {
+      return res.status(400).json({ message: 'No fee required for this role or invalid role.' });
+    }
+
+    console.log(`Creating registration order for Role: ${role}, Email: ${email}, Amount: ${fee}`);
+
+    const options = {
+      amount: Math.round(fee * 100), // paise
+      currency: 'INR',
+      receipt: `reg_receipt_${Date.now()}`,
+    };
+
+    const order = await razorpay.orders.create(options);
+
+    res.json({
+      orderId: order.id,
+      amount: order.amount,
+      keyId: process.env.RAZORPAY_KEY_ID
+    });
+  } catch (error) {
+    console.error('Registration Order Error:', error);
     res.status(500).json({ message: error.message });
   }
 });

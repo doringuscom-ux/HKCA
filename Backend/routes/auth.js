@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
+const GlobalSettings = require('../models/GlobalSettings');
+const RegistrationCode = require('../models/RegistrationCode');
+const crypto = require('crypto');
 
 // @desc    Register a new user (Athlete/Coach/Club)
 // @route   POST /api/auth/register
@@ -38,6 +41,87 @@ router.post('/register', async (req, res, next) => {
       }
     }
 
+    const { paymentDetails, registrationCode } = req.body;
+    let finalPaymentData = {
+      paymentStatus: 'unpaid',
+      paymentMethod: 'online'
+    };
+
+    // Check if fee is required
+    let settings = await GlobalSettings.findOne();
+    if (!settings) {
+      // Initialize default settings if not exists
+      settings = await GlobalSettings.create({
+        registrationFees: { athlete: 0, coach: 0, club: 0 }
+      });
+    }
+    const requiredFee = settings.registrationFees[role] || 0;
+
+    if (requiredFee > 0) {
+      if (registrationCode) {
+        // Handle Offline Code
+        const codeDoc = await RegistrationCode.findOne({ 
+          code: registrationCode.toUpperCase(), 
+          email: email.toLowerCase(),
+          role,
+          isUsed: false 
+        });
+
+        if (!codeDoc) {
+          return res.status(400).json({ message: 'Invalid or already used registration code for this email/role.' });
+        }
+
+        finalPaymentData = {
+          paymentStatus: 'paid',
+          paymentMethod: 'offline',
+          isFeeReceived: true,
+          registrationPayment: {
+            registrationCode: registrationCode.toUpperCase(),
+            amount: requiredFee,
+            paidAt: new Date()
+          }
+        };
+        
+        // Mark code as used
+        codeDoc.isUsed = true;
+        await codeDoc.save();
+      } else if (paymentDetails) {
+        // Handle Online Payment
+        const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = paymentDetails;
+        
+        // Verify signature
+        const shasum = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
+        shasum.update(`${razorpay_order_id}|${razorpay_payment_id}`);
+        const digest = shasum.digest('hex');
+
+        if (digest !== razorpay_signature) {
+          return res.status(400).json({ message: 'Payment verification failed. Transaction not legitimate.' });
+        }
+
+        finalPaymentData = {
+          paymentStatus: 'paid',
+          paymentMethod: 'online',
+          isFeeReceived: true,
+          registrationPayment: {
+            razorpayOrderId: razorpay_order_id,
+            razorpayPaymentId: razorpay_payment_id,
+            razorpaySignature: razorpay_signature,
+            amount: requiredFee,
+            paidAt: new Date()
+          }
+        };
+      } else {
+        return res.status(400).json({ message: `Registration fee of ₹${requiredFee} is required to join as ${role}.` });
+      }
+    } else {
+      // Fee is 0
+      finalPaymentData = {
+        paymentStatus: 'paid',
+        paymentMethod: 'manual',
+        isFeeReceived: true
+      };
+    }
+
     const user = await User.create({
       username,
       email,
@@ -48,8 +132,14 @@ router.post('/register', async (req, res, next) => {
       guardianInfo,
       contactInfo,
       documents,
-      isRegistered: true
+      isRegistered: true,
+      ...finalPaymentData
     });
+
+    if (user && registrationCode) {
+      // Update code with user ID
+      await RegistrationCode.findOneAndUpdate({ code: registrationCode.toUpperCase() }, { usedBy: user._id });
+    }
 
     if (user) {
       req.session.userId = user._id;

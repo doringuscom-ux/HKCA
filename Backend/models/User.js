@@ -84,6 +84,29 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  // Payment Tracking
+  paymentMethod: {
+    type: String,
+    enum: ['online', 'offline', 'manual'],
+    default: 'online',
+  },
+  paymentStatus: {
+    type: String,
+    enum: ['unpaid', 'paid'],
+    default: 'unpaid',
+  },
+  isFeeReceived: {
+    type: Boolean,
+    default: false,
+  },
+  registrationPayment: {
+    razorpayOrderId: String,
+    razorpayPaymentId: String,
+    razorpaySignature: String,
+    registrationCode: String,
+    amount: Number,
+    paidAt: Date,
+  },
   // Verification System
   isVerified: {
     type: Boolean,

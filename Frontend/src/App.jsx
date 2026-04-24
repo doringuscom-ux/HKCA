@@ -39,6 +39,7 @@ import DailyReport from './pages/admin/DailyReport'
 import ManageNews from './pages/admin/ManageNews'
 import ManageInquiries from './pages/admin/ManageInquiries'
 import ManageChatbot from './pages/admin/ManageChatbot'
+import RegistrationManager from './pages/admin/RegistrationManager'
 
 function App() {
   const location = useLocation()
@@ -99,6 +100,7 @@ function App() {
             <Route path="report" element={<DailyReport />} />
             <Route path="inquiries" element={<ManageInquiries />} />
             <Route path="chatbot" element={<ManageChatbot />} />
+            <Route path="registration" element={<RegistrationManager />} />
           </Route>
         </Routes>
       </AnimatePresence>

@@ -13,7 +13,8 @@ import {
   RiArticleLine,
   RiFolderVideoLine,
   RiMailSendLine,
-  RiRobot2Line
+  RiRobot2Line,
+  RiMoneyDollarCircleLine
 } from 'react-icons/ri';
 
 const AdminSidebar = () => {
@@ -36,6 +37,7 @@ const AdminSidebar = () => {
     { name: 'Daily Report', path: '/admin/report', icon: <RiLineChartLine /> },
     { name: 'Inquiries', path: '/admin/inquiries', icon: <RiMailSendLine /> },
     { name: 'AI Chatbot', path: '/admin/chatbot', icon: <RiRobot2Line /> },
+    { name: 'Registration Settings', path: '/admin/registration', icon: <RiMoneyDollarCircleLine /> },
   ];
 
   return (

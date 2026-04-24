@@ -11,6 +11,8 @@ const Coupon = require('../models/Coupon');
 const Publication = require('../models/Publication');
 const Asset = require('../models/Asset');
 const ContactInquiry = require('../models/ContactInquiry');
+const GlobalSettings = require('../models/GlobalSettings');
+const RegistrationCode = require('../models/RegistrationCode');
 
 // Multer storage configuration
 const storage = multer.memoryStorage();
@@ -717,6 +719,112 @@ router.delete('/users/:id', protect, adminGuard, async (req, res) => {
 
     await user.deleteOne();
     res.json({ message: 'User and their registrations deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Update if registration fee received manually
+// @route   PUT /api/admin/users/:id/fee-received
+// @access  Private (Admin only)
+router.put('/users/:id/fee-received', protect, adminGuard, async (req, res) => {
+  const { isFeeReceived } = req.body;
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    user.isFeeReceived = isFeeReceived;
+    if (isFeeReceived) {
+      user.paymentStatus = 'paid';
+    }
+    await user.save();
+    res.json({ message: 'User fee status updated', isFeeReceived: user.isFeeReceived });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// --- Global Settings & Registration Fee Routes ---
+
+// @desc    Get registration fees
+// @route   GET /api/admin/settings/registration-fees
+// @access  Public
+router.get('/settings/registration-fees', async (req, res) => {
+  try {
+    let settings = await GlobalSettings.findOne();
+    if (!settings) {
+      // Create default settings if not found
+      settings = await GlobalSettings.create({
+        registrationFees: { athlete: 0, coach: 0, club: 0 }
+      });
+    }
+    res.json(settings.registrationFees);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Update registration fees
+// @route   PUT /api/admin/settings/registration-fees
+// @access  Private (Admin only)
+router.put('/settings/registration-fees', protect, adminGuard, async (req, res) => {
+  const { athlete, coach, club } = req.body;
+  try {
+    let settings = await GlobalSettings.findOne();
+    if (!settings) {
+      settings = new GlobalSettings();
+    }
+    settings.registrationFees = { athlete, coach, club };
+    await settings.save();
+    res.json(settings.registrationFees);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// --- Registration Code Management ---
+
+// @desc    Generate a registration code
+// @route   POST /api/admin/registration-codes
+// @access  Private (Admin only)
+router.post('/registration-codes', protect, adminGuard, async (req, res) => {
+  const { email, role } = req.body;
+  try {
+    // Generate a simple unique code
+    const code = Math.random().toString(36).substring(2, 10).toUpperCase();
+    
+    const newCode = await RegistrationCode.create({
+      code,
+      email,
+      role,
+      generatedBy: req.user._id
+    });
+    
+    res.status(201).json(newCode);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Get all registration codes
+// @route   GET /api/admin/registration-codes
+// @access  Private (Admin only)
+router.get('/registration-codes', protect, adminGuard, async (req, res) => {
+  try {
+    const codes = await RegistrationCode.find().sort({ createdAt: -1 });
+    res.json(codes);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Delete a registration code
+// @route   DELETE /api/admin/registration-codes/:id
+// @access  Private (Admin only)
+router.delete('/registration-codes/:id', protect, adminGuard, async (req, res) => {
+  try {
+    await RegistrationCode.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Code deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
