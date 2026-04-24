@@ -121,7 +121,7 @@ const Footer = () => {
                 <input 
                   type="email" 
                   placeholder="Your Email Address" 
-                  className="w-full bg-transparent border-b border-gray-800 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors duration-300 placeholder:text-gray-600 text-center lg:text-left"
+                  className="w-full bg-transparent border-b border-gray-800 py-3 text-sm font-bold text-white focus:outline-none focus:border-blue-500 transition-colors duration-300 placeholder:text-gray-500 text-center lg:text-left"
                 />
               </div>
               <button className="flex items-center justify-center lg:justify-start gap-4 text-[12px] font-black tracking-[0.25em] uppercase text-white hover:text-blue-500 transition-all duration-300 group w-full lg:w-auto">
