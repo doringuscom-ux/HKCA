@@ -274,13 +274,43 @@ const EventDetailsPage = () => {
                 </div>
               </div>
 
-              <button
-                onClick={() => setIsModalOpen(true)}
-                disabled={isRegistered || (event.registrationDeadline && new Date() > new Date(event.registrationDeadline))}
-                className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-3 shadow-xl shadow-blue-900/20 active:scale-[0.98]"
-              >
-                {isRegistered ? 'ALREADY JOINED' : 'JOIN EVENT'} <RiArrowRightLine size={18} />
-              </button>
+              {user ? (
+                <>
+                  {!user.isVerified && (
+                    <div className="mb-6 p-5 bg-amber-600/10 border border-amber-500/20 rounded-[1.5rem] flex items-start gap-4 animate-in fade-in slide-in-from-top-4">
+                      <div className="w-10 h-10 bg-amber-500/10 rounded-xl flex items-center justify-center border border-amber-500/20 text-amber-500 shrink-0">
+                        <RiErrorWarningLine size={20} />
+                      </div>
+                      <div>
+                        <p className="text-amber-500 text-[11px] font-black uppercase tracking-widest mb-1.5">Profile Verification Required</p>
+                        <p className="text-amber-200/60 text-[10px] leading-relaxed font-bold">
+                          Please complete your profile by providing your <span className="text-amber-400">Personal Information, Identity Documents, and Contact Details</span>. Event registration is only available for accounts verified by the HKCA Administration.
+                        </p>
+                        <button 
+                          onClick={() => navigate('/profile')}
+                          className="mt-3 text-amber-500 text-[10px] font-black uppercase tracking-widest hover:underline flex items-center gap-1.5 transition-all"
+                        >
+                          Complete Profile <RiArrowRightLine size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  <button
+                    onClick={() => setIsModalOpen(true)}
+                    disabled={isRegistered || !user.isVerified || (event.registrationDeadline && new Date() > new Date(event.registrationDeadline))}
+                    className="w-full py-5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-800 disabled:text-slate-500 disabled:border-slate-700 disabled:cursor-not-allowed text-white rounded-[1.5rem] font-black text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 shadow-2xl shadow-blue-900/30 active:scale-[0.98] border border-transparent"
+                  >
+                    {isRegistered ? 'ALREADY JOINED' : 'JOIN EVENT'} <RiArrowRightLine size={18} />
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => navigate('/login')}
+                  className="w-full py-5 bg-white text-black hover:bg-gray-100 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 shadow-2xl shadow-black/20"
+                >
+                  LOGIN TO JOIN <RiArrowRightLine size={18} />
+                </button>
+              )}
             </div>
           </div>
         </section>

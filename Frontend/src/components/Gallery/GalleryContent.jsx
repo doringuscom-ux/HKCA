@@ -116,7 +116,7 @@ const GalleryContent = () => {
                   onClick={() => setSelectedImage(item)}
                   className="group relative rounded-2xl overflow-hidden cursor-pointer shadow-lg bg-[#1a242f] border border-gray-800"
                 >
-                  <div className="aspect-square w-full relative">
+                  <div className="aspect-[4/3] w-full relative">
                     {item.type === 'video' ? (
                       <div className="w-full h-full relative">
                         {/* Show coverImage or auto-extracted YouTube thumbnail */}
@@ -129,7 +129,7 @@ const GalleryContent = () => {
                             })()
                           }
                           alt={item.title}
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-110"
                           onError={(e) => { e.target.style.display='none'; }}
                         />
                         {/* Dark overlay */}
@@ -145,7 +145,7 @@ const GalleryContent = () => {
                         </div>
                       </div>
                     ) : (
-                      <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                      <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-110" />
                     )}
                     <div className="absolute inset-0 bg-linear-to-t from-[#131b23] via-transparent to-transparent opacity-40" />
                   </div>

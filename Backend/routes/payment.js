@@ -204,13 +204,29 @@ router.post('/verify', protect, async (req, res) => {
   }
 });
 
+const User = require('../models/User');
+
 // @desc    Create Razorpay order for Registration Fee
 // @route   POST /api/payment/create-registration-order
 // @access  Public (User not created yet)
 router.post('/create-registration-order', async (req, res) => {
-  const { role, email } = req.body;
+  const { role, email, username } = req.body;
 
   try {
+    // Preliminary Validation: Check if email or username already exists
+    if (email) {
+      const emailExists = await User.findOne({ email: email.toLowerCase() });
+      if (emailExists) {
+        return res.status(400).json({ message: 'Email already registered. Please login or use a different email.' });
+      }
+    }
+
+    if (username) {
+      const usernameExists = await User.findOne({ username });
+      if (usernameExists) {
+        return res.status(400).json({ message: 'Username is already taken. Please choose another one.' });
+      }
+    }
     let settings = await GlobalSettings.findOne();
     if (!settings) {
       settings = await GlobalSettings.create({

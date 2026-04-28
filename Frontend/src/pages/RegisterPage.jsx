@@ -119,7 +119,7 @@ const RegisterPage = () => {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (directPaymentDetails = null) => {
     if (!validateStep(1) || !validateStep(2)) return;
     
     setIsSubmitting(true);
@@ -130,7 +130,7 @@ const RegisterPage = () => {
         password: formData.password,
         role: formData.role,
         personalInfo: formData.personalInfo,
-        paymentDetails,
+        paymentDetails: directPaymentDetails || paymentDetails,
         registrationCode: regCode,
         isRegistered: true
       };
@@ -442,7 +442,8 @@ const RegisterPage = () => {
                                 setIsSubmitting(true);
                                 const { data } = await api.post('/payment/create-registration-order', {
                                   role: formData.role,
-                                  email: formData.email
+                                  email: formData.email,
+                                  username: formData.username
                                 });
 
                                 const options = {
@@ -454,6 +455,8 @@ const RegisterPage = () => {
                                   order_id: data.orderId,
                                   handler: function (response) {
                                     setPaymentDetails(response);
+                                    // Automatically trigger registration submission
+                                    handleSubmit(response);
                                   },
                                   prefill: {
                                     name: `${formData.personalInfo.firstName} ${formData.personalInfo.lastName}`,
@@ -462,6 +465,11 @@ const RegisterPage = () => {
                                   theme: {
                                     color: "#2563eb",
                                   },
+                                  modal: {
+                                    ondismiss: function() {
+                                      setIsSubmitting(false);
+                                    }
+                                  }
                                 };
 
                                 const rzp = new window.Razorpay(options);
@@ -469,7 +477,8 @@ const RegisterPage = () => {
                               } catch (err) {
                                 alert(err.response?.data?.message || 'Error creating payment order');
                               } finally {
-                                setIsSubmitting(false);
+                                // Don't set isSubmitting to false here because we want it to stay true 
+                                // until registration is complete after payment, or until modal is closed
                               }
                             }}
                             className="px-10 py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-3xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-xl shadow-blue-500/20"

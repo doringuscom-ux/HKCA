@@ -677,6 +677,7 @@ const ManageUsers = () => {
   const [sendingNote, setSendingNote] = useState(false);
   const [editUser, setEditUser] = useState(null);
   const [filterStatus, setFilterStatus] = useState('all'); // all, pending, verified, rejected
+  const [filterRole, setFilterRole] = useState('all'); // all, athlete, coach, club
   const [searchQuery, setSearchQuery] = useState('');
   const [updateLoading, setUpdateLoading] = useState(null);
   const [isEditingData, setIsEditingData] = useState(false);
@@ -751,11 +752,13 @@ const ManageUsers = () => {
   };
 
   const filteredUsers = users.filter(user => {
-    const matchesFilter = filterStatus === 'all' || 
+    const matchesStatus = filterStatus === 'all' || 
                          (filterStatus === 'pending' && user.verificationStatus === 'pending') ||
                          (filterStatus === 'verified' && user.isVerified) ||
                          (filterStatus === 'rejected' && user.verificationStatus === 'rejected');
     
+    const matchesRole = filterRole === 'all' || user.role === filterRole;
+
     const searchStr = searchQuery.toLowerCase();
     const matchesSearch = !searchQuery || 
                          user.username?.toLowerCase().includes(searchStr) ||
@@ -763,7 +766,7 @@ const ManageUsers = () => {
                          user.personalInfo?.firstName?.toLowerCase().includes(searchStr) ||
                          user.personalInfo?.lastName?.toLowerCase().includes(searchStr);
                          
-    return matchesFilter && matchesSearch;
+    return matchesStatus && matchesRole && matchesSearch;
   });
 
   if (loading) {
@@ -815,7 +818,7 @@ const ManageUsers = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <div className="flex items-center gap-3 bg-gray-50 p-2 rounded-2xl border border-gray-100 w-full md:w-auto">
+        <div className="flex items-center gap-3 bg-gray-50 p-2 rounded-2xl border border-gray-100 w-full md:w-auto overflow-x-auto">
           <RiFilter3Line className="ml-3 text-gray-400" size={20} />
           {['all', 'pending', 'verified', 'rejected'].map(status => (
             <button
@@ -828,6 +831,23 @@ const ManageUsers = () => {
               }`}
             >
               {status}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-3 bg-gray-50 p-2 rounded-2xl border border-gray-100 w-full md:w-auto overflow-x-auto">
+          <RiShieldUserLine className="ml-3 text-gray-400" size={20} />
+          {['all', 'athlete', 'coach', 'club'].map(role => (
+            <button
+              key={role}
+              onClick={() => setFilterRole(role)}
+              className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+                filterRole === role 
+                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20' 
+                : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              {role}
             </button>
           ))}
         </div>
