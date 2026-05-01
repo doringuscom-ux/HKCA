@@ -259,13 +259,13 @@ const ProfilePage = () => {
   const [payingReg, setPayingReg] = useState(null);
 
   const allTabs = [
-    { id: 'personal', label: 'Personal', icon: <RiUserLine />, roles: ['athlete', 'coach', 'viewer'] },
-    { id: 'club', label: 'Club Info', icon: <RiShieldUserLine />, roles: ['club'] },
-    { id: 'contact', label: 'Contact', icon: <RiMapPinLine />, roles: ['athlete', 'coach', 'club', 'viewer'] },
-    { id: 'documents', label: 'Documents', icon: <RiFileTextLine />, roles: ['athlete', 'coach', 'club', 'viewer'] },
-    { id: 'events', label: 'Events Hub', icon: <RiCalendarCheckLine />, roles: ['athlete', 'coach', 'club', 'viewer'] },
-    { id: 'achievements', label: 'Achievements', icon: <RiTrophyLine />, roles: ['athlete', 'coach', 'club', 'viewer'] },
-    { id: 'security', label: 'Security', icon: <RiLockPasswordLine />, roles: ['athlete', 'coach', 'club', 'viewer'] },
+    { id: 'personal', label: 'Personal', icon: <RiUserLine />, roles: ['admin', 'athlete', 'coach', 'viewer', 'user'] },
+    { id: 'club', label: 'Club Info', icon: <RiShieldUserLine />, roles: ['club', 'admin'] },
+    { id: 'contact', label: 'Contact', icon: <RiMapPinLine />, roles: ['admin', 'athlete', 'coach', 'club', 'viewer', 'user'] },
+    { id: 'documents', label: 'Documents', icon: <RiFileTextLine />, roles: ['admin', 'athlete', 'coach', 'club', 'viewer', 'user'] },
+    { id: 'events', label: 'Events Hub', icon: <RiCalendarCheckLine />, roles: ['admin', 'athlete', 'coach', 'club', 'viewer', 'user'] },
+    { id: 'achievements', label: 'Achievements', icon: <RiTrophyLine />, roles: ['admin', 'athlete', 'coach', 'club', 'viewer', 'user'] },
+    { id: 'security', label: 'Security', icon: <RiLockPasswordLine />, roles: ['admin', 'athlete', 'coach', 'club', 'viewer', 'user'] },
   ];
 
   const tabs = allTabs.filter(tab => tab.roles.includes(user?.role));
@@ -686,7 +686,7 @@ const ProfilePage = () => {
                       readOnly={!isEditing || (user.role !== 'admin' && user.isVerified)}
                       info={user.isVerified ? "Locked" : "Editable"}
                     />
-                    {(user.role === 'athlete' || user.role === 'coach') && (
+                    {(user.role === 'athlete' || user.role === 'coach' || user.role === 'admin') && (
                         <SelectField 
                             label="Blood Group" 
                             value={formData.personalInfo?.bloodGroup} 
@@ -723,7 +723,7 @@ const ProfilePage = () => {
                         placeholder="12-digit Aadhaar Number"
                         maxLength={12}
                     />
-                    {user.role === 'athlete' && (
+                    {(user.role === 'athlete' || user.role === 'admin') && (
                       <>
                         <InputField 
                           label="Father's Name" 
@@ -738,6 +738,14 @@ const ProfilePage = () => {
                           onChange={(val) => handleNestedChange('guardianInfo', 'motherName', val)}
                           readOnly={!isEditing || (user.role !== 'admin' && user.isVerified)}
                           info={user.isVerified ? "Locked" : null}
+                        />
+                        <InputField 
+                          label="Guardian Name" 
+                          value={formData.guardianInfo?.guardianName} 
+                          onChange={(val) => handleNestedChange('guardianInfo', 'guardianName', val)}
+                          readOnly={!isEditing || (user.role !== 'admin' && user.isVerified)}
+                          info={user.isVerified ? "Locked" : null}
+                          placeholder="If not Father/Mother"
                         />
                       </>
                     )}
@@ -875,11 +883,14 @@ const ProfilePage = () => {
                   )}
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {(user.role === 'athlete' || user.role === 'coach' ? [
+                    {(['athlete', 'coach', 'admin', 'user'].includes(user.role) ? [
                       { key: 'photograph', label: 'Member Photograph', required: true },
                       { key: 'aadhaarFront', label: 'Aadhaar Card (Front)', required: true },
                       { key: 'aadhaarBack', label: 'Aadhaar Card (Back)', required: true },
-                      { key: 'dobProof', label: 'DOB Proof / DMC', required: true }
+                      { key: 'dobProof', label: 'DOB Proof / DMC', required: true },
+                      { key: 'idProof', label: 'ID Proof (PAN/Passport)', required: false },
+                      { key: 'addressProof', label: 'Address Proof', required: false },
+                      { key: 'signature', label: 'Signature', required: false }
                     ] : []).map((doc) => {
                       const url = formData.documents?.[doc.key];
                       const uploadStatus = uploadingStates[doc.key];

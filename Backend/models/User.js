@@ -38,6 +38,7 @@ const userSchema = new mongoose.Schema({
     bloodGroup: String,
     aadhaarNumber: {
       type: String,
+      required: [true, 'Please provide your Aadhaar number'],
       match: [/^\d{12}$/, 'Aadhaar number must be exactly 12 digits']
     },
   },
@@ -50,6 +51,7 @@ const userSchema = new mongoose.Schema({
     email: String,
     phone: {
       type: String,
+      required: [true, 'Please provide your phone number'],
       match: [/^\d{10}$/, 'Phone number must be exactly 10 digits']
     },
     address: {
@@ -74,11 +76,19 @@ const userSchema = new mongoose.Schema({
   documents: {
     photograph: String,
     dobProof: String,
-    aadhaarFront: String,
-    aadhaarBack: String,
+    aadhaarFront: {
+      type: String,
+      required: [true, 'Please upload Aadhaar card front image'],
+    },
+    aadhaarBack: {
+      type: String,
+      required: [true, 'Please upload Aadhaar card back image'],
+    },
     idProof: String,
     addressProof: String,
     signature: String,
+    clubLogo: String,
+    clubLegalDoc: String,
   },
   isRegistered: {
     type: Boolean,
