@@ -31,7 +31,6 @@ const userSchema = new mongoose.Schema({
   },
   personalInfo: {
     firstName: String,
-    middleName: String,
     lastName: String,
     gender: String,
     birthDate: Date,
@@ -56,7 +55,6 @@ const userSchema = new mongoose.Schema({
     },
     address: {
       line1: String,
-      line2: String,
       pinCode: {
         type: String,
         match: [/^\d{6}$/, 'PIN code must be exactly 6 digits']
@@ -66,11 +64,6 @@ const userSchema = new mongoose.Schema({
       state: String,
       village: String,
       postOffice: String,
-    },
-    participatingUnit: String,
-    emergencyContact: {
-      type: String,
-      match: [/^\d{10}$/, 'Emergency contact must be a valid 10-digit number']
     },
   },
   documents: {

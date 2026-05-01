@@ -16,7 +16,7 @@ const TopBar = () => {
           </a>
           <div className="flex items-center gap-2.5 group cursor-default text-center sm:text-left justify-center w-full sm:w-auto">
             <IoLocationSharp size={18} className="group-hover:scale-110 transition-transform text-white/90 shrink-0" />
-            <span className="tracking-tight text-[12px] sm:text-sm">House Number 1161, Sector 14, Sonepat, Haryana</span>
+            <span className="tracking-tight text-[12px] sm:text-sm">#1161, Sector 14, Sonepat, Haryana</span>
           </div>
         </div>
 

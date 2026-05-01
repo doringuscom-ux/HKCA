@@ -678,6 +678,27 @@ router.put('/users/:id/message', protect, adminGuard, async (req, res) => {
   }
 });
 
+// @desc    Admin update user password
+// @route   PUT /api/admin/users/:id/password
+// @access  Private (Admin only)
+router.put('/users/:id/password', protect, adminGuard, async (req, res) => {
+  const { newPassword } = req.body;
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters long' });
+    }
+
+    user.password = newPassword;
+    await user.save();
+    res.json({ message: 'User password updated successfully by admin' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // @desc    Admin Edit User Profile (Any field)
 // @route   PUT /api/admin/users/:id/profile
 // @access  Private (Admin only)

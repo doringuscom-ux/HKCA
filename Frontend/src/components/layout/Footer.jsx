@@ -51,19 +51,18 @@ const Footer = () => {
             {/* Registered Office */}
             <div className="space-y-4">
               <h3 className="font-heading text-xl lg:text-2xl font-black tracking-wider uppercase border-b-2 border-blue-600 w-fit pb-1 text-white text-center lg:text-left mx-auto lg:mx-0">
-                REGISTERED OFFICE
+                REGD. OFFICE
               </h3>
               <p className="text-gray-400 text-sm md:text-[15px] leading-relaxed max-w-[240px] text-center lg:text-left">
-                House Number 1161, <br className="hidden lg:block" />
-                Sector 14, Sonepat, <br className="hidden lg:block" />
-                Haryana
+                #1161, Sector 14, <br className="hidden lg:block" />
+                Sonepat, Haryana
               </p>
             </div>
 
             {/* Headquarters */}
             <div className="space-y-4">
               <h3 className="font-heading text-xl lg:text-2xl font-black tracking-wider uppercase border-b-2 border-blue-600 w-fit pb-1 text-white text-center lg:text-left mx-auto lg:mx-0">
-                VISIT US
+                HEAD OFFICE
               </h3>
               <p className="text-gray-400 text-sm md:text-[15px] leading-relaxed max-w-[240px] text-center lg:text-left">
                 SCO 19, Sector 11, <br className="hidden lg:block" />

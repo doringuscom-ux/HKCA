@@ -102,120 +102,68 @@ const ForgotPasswordPage = () => {
           </div>
         </div>
 
-        {/* Right Side: Form */}
-        <div className="p-8 md:p-16 lg:p-24 flex flex-col justify-center">
-          <div className="mb-12">
-            <h2 className="text-3xl font-black text-slate-900 mb-2">
-              {step === 1 ? 'Forgot Password?' : 'Set New Password.'}
+        {/* Right Side: Instructions */}
+        <div className="p-8 sm:p-12 md:p-16 lg:p-24 flex flex-col justify-center">
+          <div className="mb-8 sm:mb-12">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-50 text-blue-600 rounded-2xl sm:rounded-3xl flex items-center justify-center mb-6 sm:mb-8">
+              <RiShieldFlashLine size={28} className="sm:hidden" />
+              <RiShieldFlashLine size={32} className="hidden sm:block" />
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 mb-2 tracking-tight">
+              Coming <span className="text-blue-600">Soon.</span>
             </h2>
             <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px]">
-              {step === 1 ? 'Step 1: Identify your account' : 'Step 2: Enter OTP and update'}
+              The self-service reset portal is under maintenance
             </p>
           </div>
 
-          {(error || success) && (
-            <div className={`mb-8 p-5 rounded-2xl flex items-start gap-4 animate-in fade-in slide-in-from-top-2 ${error ? 'bg-red-50 border border-red-100' : 'bg-emerald-50 border border-emerald-100'}`}>
-              <RiInformationLine className={error ? 'text-red-500' : 'text-emerald-500'} size={20} />
-              <p className={`text-xs font-bold leading-relaxed ${error ? 'text-red-600' : 'text-emerald-600'}`}>
-                {error || success}
-              </p>
-            </div>
-          )}
-
-          {step === 1 ? (
-             <form onSubmit={handleRequestOTP} className="space-y-8">
-               <div className="relative group">
-                 <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-3 ml-1 group-focus-within:text-blue-600 transition-colors">Username or Email</label>
-                 <div className="relative">
-                   <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors">
-                     <RiMailLine size={20} />
-                   </div>
-                   <input 
-                     type="text"
-                     value={identity}
-                     onChange={(e) => setIdentity(e.target.value)}
-                     className="w-full pl-16 pr-8 py-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-500/5 transition-all text-lg"
-                     placeholder="yourname@gmail.com"
-                   />
-                 </div>
-               </div>
-
-               <button 
-                 type="submit"
-                 disabled={loading}
-                 className="w-full py-6 bg-slate-900 text-white rounded-3xl font-black uppercase tracking-[0.3em] text-xs shadow-2xl shadow-slate-200 hover:bg-black hover:-translate-y-1 transition-all active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-50"
-               >
-                 {loading ? 'Requesting...' : 'Request Reset OTP'} <RiArrowRightLine size={18} />
-               </button>
-             </form>
-          ) : (
-            <form onSubmit={handleResetPassword} className="space-y-6">
-              <div className="relative group">
-                <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 mb-3 ml-1">Verification OTP</label>
-                <input 
-                  type="text"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  maxLength={6}
-                  className="w-full px-5 py-5 bg-blue-50/50 border-2 border-blue-100 rounded-2xl font-black text-2xl tracking-[0.5em] text-center text-slate-900 outline-none focus:border-blue-600 transition-all"
-                  placeholder="000000"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="relative group">
-                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-3 ml-1">New Password</label>
-                  <div className="relative">
-                    <input 
-                      type={showPassword ? "text" : "password"}
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      className="w-full pl-6 pr-12 py-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:bg-white focus:border-blue-600 transition-all font-mono"
-                      placeholder="••••••••"
-                    />
-                    <button 
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300 hover:text-blue-500 transition-colors"
-                    >
-                      {showPassword ? <RiEyeOffLine size={18} /> : <RiEyeLine size={18} />}
-                    </button>
-                  </div>
-                </div>
-                <div className="relative group">
-                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-3 ml-1">Confirm Password</label>
-                  <input 
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-6 py-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:bg-white focus:border-blue-600 transition-all font-mono"
-                    placeholder="••••••••"
-                  />
-                </div>
-              </div>
-
-              <button 
-                type="submit"
-                disabled={loading}
-                className="w-full py-6 bg-emerald-500 text-white rounded-3xl font-black uppercase tracking-[0.3em] text-xs shadow-2xl shadow-emerald-100 hover:bg-emerald-600 hover:-translate-y-1 transition-all active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-50"
-              >
-                {loading ? 'Updating...' : 'Update Password'} <RiArrowRightLine size={18} />
-              </button>
+          <div className="space-y-6 sm:space-y-8">
+            <div className="bg-slate-50 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] border border-slate-100 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-blue-500/10 transition-all duration-700" />
               
-              <button 
-                type="button" 
-                onClick={() => setStep(1)}
-                className="w-full text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-slate-600 transition-colors py-2"
-              >
-                Resend OTP / Use Different Account
-              </button>
-            </form>
-          )}
+              <h3 className="text-[10px] sm:text-xs font-black uppercase tracking-[0.3em] text-blue-600 mb-6 flex items-center gap-2">
+                <RiInformationLine size={16} /> How to Reset Password:
+              </h3>
+              
+              <ul className="space-y-5 sm:space-y-6">
+                <li className="flex gap-4">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-white shadow-sm border border-slate-100 flex items-center justify-center shrink-0 text-blue-600 font-black text-[10px] sm:text-xs">
+                    1
+                  </div>
+                  <p className="text-xs sm:text-sm font-bold text-slate-600 leading-relaxed">
+                    Take a clear, well-lit photo of the <span className="text-slate-900 underline decoration-blue-500 decoration-2 underline-offset-4">FRONT SIDE</span> of your Aadhaar Card.
+                  </p>
+                </li>
+                <li className="flex gap-4">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-white shadow-sm border border-slate-100 flex items-center justify-center shrink-0 text-blue-600 font-black text-[10px] sm:text-xs">
+                    2
+                  </div>
+                  <p className="text-xs sm:text-sm font-bold text-slate-600 leading-relaxed">
+                    Navigate to our <Link to="/contact" className="text-blue-600 hover:text-blue-800 underline underline-offset-4 transition-colors">Contact Form</Link> and raise a security query.
+                  </p>
+                </li>
+                <li className="flex gap-4">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-white shadow-sm border border-slate-100 flex items-center justify-center shrink-0 text-blue-600 font-black text-[10px] sm:text-xs">
+                    3
+                  </div>
+                  <p className="text-xs sm:text-sm font-bold text-slate-600 leading-relaxed">
+                    Attach the photo and mention your username. Admin will verify and reset your password.
+                  </p>
+                </li>
+              </ul>
+            </div>
 
-          <div className="mt-12 pt-10 border-t border-slate-100 text-center">
-            <p className="text-slate-400 text-xs font-bold italic">
-              Wait, I remember my password!{' '}
-              <Link to="/login" className="text-blue-600 hover:text-blue-800 transition-colors non-italic">Sign In</Link>
+            <Link 
+              to="/login"
+              className="w-full py-5 sm:py-6 bg-slate-900 text-white rounded-2xl sm:rounded-3xl font-black uppercase tracking-[0.3em] text-[10px] sm:text-xs shadow-2xl shadow-slate-200 hover:bg-black hover:-translate-y-1 transition-all active:scale-[0.98] flex items-center justify-center gap-3"
+            >
+              <RiArrowLeftLine size={18} /> Return to Login
+            </Link>
+          </div>
+
+          <div className="mt-8 sm:mt-12 pt-8 sm:pt-10 border-t border-slate-100 text-center">
+            <p className="text-slate-400 text-[9px] sm:text-[10px] font-black uppercase tracking-widest leading-loose">
+              HKCA SECURITY PROTOCOL • VERIFICATION REQUIRED
             </p>
           </div>
         </div>

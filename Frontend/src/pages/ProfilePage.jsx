@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
 import EventRegistrationModal from '../components/events/EventRegistrationModal';
 import { 
   RiUserLine, 
@@ -237,6 +238,7 @@ const ProfilePage = () => {
   const [uploadingStates, setUploadingStates] = useState({}); // { field: 'loading' | 'success' | 'error' }
   const [uploadErrors, setUploadErrors] = useState({}); // { field: errorMessage }
 
+  const [showComingSoon, setShowComingSoon] = useState(false);
   const [passwordData, setPasswordData] = useState({
     oldPassword: '',
     newPassword: '',
@@ -661,13 +663,6 @@ const ProfilePage = () => {
                       info={user.isVerified ? "Locked after verification" : null}
                     />
                     <InputField 
-                      label="Middle Name" 
-                      value={formData.personalInfo?.middleName} 
-                      onChange={(val) => handleNestedChange('personalInfo', 'middleName', val)}
-                      readOnly={!isEditing || (user.role !== 'admin' && user.isVerified)}
-                      info={user.isVerified ? "Locked" : null}
-                    />
-                    <InputField 
                       label="Last Name" 
                       value={formData.personalInfo?.lastName} 
                       onChange={(val) => handleNestedChange('personalInfo', 'lastName', val)}
@@ -792,18 +787,6 @@ const ProfilePage = () => {
                       readOnly={!isEditing}
                       info="Editable anytime"
                     />
-                    <InputField 
-                      label="Participating Unit" 
-                      value={formData.contactInfo?.participatingUnit} 
-                      onChange={(val) => handleNestedChange('contactInfo', 'participatingUnit', val)}
-                      readOnly={!isEditing}
-                    />
-                    <InputField 
-                      label="Emergency Contact" 
-                      value={formData.contactInfo?.emergencyContact} 
-                      onChange={(val) => handleNestedChange('contactInfo', 'emergencyContact', val)}
-                      readOnly={!isEditing}
-                    />
                   </div>
                   <div className="space-y-8">
                     <h3 className="text-xs font-black uppercase tracking-widest text-slate-300">Residential Address</h3>
@@ -813,14 +796,6 @@ const ProfilePage = () => {
                           label="Address Line 1" 
                           value={formData.contactInfo?.address?.line1} 
                           onChange={(val) => handleAddressChange('line1', val)}
-                          readOnly={!isEditing}
-                        />
-                      </div>
-                      <div className="md:col-span-2">
-                        <InputField 
-                          label="Address Line 2" 
-                          value={formData.contactInfo?.address?.line2} 
-                          onChange={(val) => handleAddressChange('line2', val)}
                           readOnly={!isEditing}
                         />
                       </div>
@@ -1256,9 +1231,8 @@ const ProfilePage = () => {
                         </div>
                       ) : (
                         <button 
-                          onClick={requestOTP}
-                          disabled={loading}
-                          className="w-full py-5 bg-slate-50 border border-slate-100 text-slate-400 rounded-3xl font-black uppercase tracking-[0.2em] text-[10px] hover:bg-white hover:text-blue-600 hover:border-blue-100 transition-all active:scale-[0.98] disabled:opacity-50"
+                          onClick={() => setShowComingSoon(true)}
+                          className="w-full py-5 bg-slate-50 border border-slate-100 text-slate-400 rounded-3xl font-black uppercase tracking-[0.2em] text-[10px] hover:bg-white hover:text-blue-600 hover:border-blue-100 transition-all active:scale-[0.98]"
                         >
                           Request OTP to Server Console
                         </button>
@@ -1521,6 +1495,74 @@ const ProfilePage = () => {
             setPayingReg(null);
           }}
         />
+      )}
+
+      {/* Coming Soon Modal for Password Reset */}
+      {showComingSoon && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100 animate-in slide-in-from-bottom-8 duration-500 flex flex-col max-h-[90vh]">
+            <div className="p-6 sm:p-10 border-b border-slate-50 shrink-0">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-50 text-blue-600 rounded-2xl sm:rounded-3xl flex items-center justify-center mb-4 sm:mb-6">
+                <RiInformationLine size={28} className="sm:hidden" />
+                <RiInformationLine size={32} className="hidden sm:block" />
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mb-2 tracking-tight">Coming Soon!</h2>
+              <p className="text-slate-500 font-bold text-sm sm:text-base leading-relaxed">
+                Self-service OTP verification is currently under maintenance.
+              </p>
+            </div>
+            
+            <div className="p-6 sm:p-10 space-y-6 overflow-y-auto custom-scrollbar">
+              <div className="bg-blue-50/50 p-5 sm:p-8 rounded-[2rem] border border-blue-100 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl -mr-12 -mt-12" />
+                
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-blue-600 mb-4 flex items-center gap-2">
+                   INSTRUCTIONS TO CHANGE PASSWORD
+                </h4>
+                
+                <ul className="space-y-5">
+                  <li className="flex gap-4">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-white shadow-sm border border-blue-100 flex items-center justify-center shrink-0 text-blue-600 font-black text-[10px] sm:text-xs">
+                      1
+                    </div>
+                    <p className="text-xs sm:text-sm font-bold text-slate-600 leading-relaxed">
+                      Take a clear photo of the <span className="text-slate-900 underline decoration-blue-500 decoration-2 underline-offset-4">FRONT SIDE</span> of your Aadhaar Card.
+                    </p>
+                  </li>
+                  <li className="flex gap-4">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-white shadow-sm border border-blue-100 flex items-center justify-center shrink-0 text-blue-600 font-black text-[10px] sm:text-xs">
+                      2
+                    </div>
+                    <p className="text-xs sm:text-sm font-bold text-slate-600 leading-relaxed">
+                      Go to the <Link to="/contact" className="text-blue-600 hover:text-blue-800 underline underline-offset-4 transition-colors">Contact Form</Link> and raise a query.
+                    </p>
+                  </li>
+                  <li className="flex gap-4">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-white shadow-sm border border-blue-100 flex items-center justify-center shrink-0 text-blue-600 font-black text-[10px] sm:text-xs">
+                      3
+                    </div>
+                    <p className="text-xs sm:text-sm font-bold text-slate-600 leading-relaxed">
+                      Attach the Aadhaar photo and mention your request.
+                    </p>
+                  </li>
+                </ul>
+
+                <div className="mt-6 p-4 bg-white/60 rounded-2xl border border-blue-50 shadow-sm">
+                   <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400 text-center leading-loose">
+                    HKCA Admin will verify your identity and update your password shortly.
+                  </p>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => setShowComingSoon(false)}
+                className="w-full py-4 sm:py-5 bg-slate-900 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-slate-200 active:scale-[0.98]"
+              >
+                Understood
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

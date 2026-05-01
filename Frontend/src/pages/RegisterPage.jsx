@@ -44,7 +44,6 @@ const RegisterPage = () => {
     role: 'athlete',
     personalInfo: {
       firstName: '',
-      middleName: '',
       lastName: '',
       gender: '',
       birthDate: '',
@@ -57,12 +56,10 @@ const RegisterPage = () => {
       guardianName: '',
     },
     contactInfo: {
+      email: '',
       phone: '',
-      participatingUnit: '',
-      emergencyContact: '',
       address: {
         line1: '',
-        line2: '',
         city: '',
         pinCode: '',
         district: '',
@@ -117,7 +114,13 @@ const RegisterPage = () => {
 
   const handleInputChange = (section, field, value) => {
     if (section === 'root') {
-      setFormData(prev => ({ ...prev, [field]: value }));
+      setFormData(prev => {
+        const newState = { ...prev, [field]: value };
+        if (field === 'email') {
+          newState.contactInfo = { ...prev.contactInfo, email: value };
+        }
+        return newState;
+      });
     } else {
       setFormData(prev => ({
         ...prev,
@@ -452,7 +455,7 @@ const RegisterPage = () => {
                     ) : (
                       /* Athlete & Coach Fields */
                       <>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                           <div className="space-y-2">
                             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">First Name</label>
                             <input 
@@ -461,16 +464,6 @@ const RegisterPage = () => {
                               className={`w-full bg-[#0d1117] border ${errors.firstName ? 'border-red-500' : 'border-slate-800'} text-white px-6 py-5 rounded-3xl outline-none transition-all font-bold`}
                               onChange={(e) => handleInputChange('personalInfo', 'firstName', e.target.value)}
                               value={formData.personalInfo.firstName}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Middle Name</label>
-                            <input 
-                              type="text" 
-                              placeholder="Middle Name" 
-                              className="w-full bg-[#0d1117] border border-slate-800 text-white px-6 py-5 rounded-3xl outline-none transition-all font-bold"
-                              onChange={(e) => handleInputChange('personalInfo', 'middleName', e.target.value)}
-                              value={formData.personalInfo.middleName}
                             />
                           </div>
                           <div className="space-y-2">
@@ -600,16 +593,6 @@ const RegisterPage = () => {
                             className={`w-full bg-[#0d1117] border ${errors.addressLine1 ? 'border-red-500' : 'border-slate-800'} text-white px-6 py-5 rounded-3xl outline-none transition-all font-bold`}
                             onChange={(e) => handleAddressChange('line1', e.target.value)}
                             value={formData.contactInfo.address.line1}
-                          />
-                        </div>
-                        <div className="md:col-span-2 space-y-2">
-                          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Address Line 2 (Optional)</label>
-                          <input 
-                            type="text" 
-                            placeholder="Landmark, Area" 
-                            className="w-full bg-[#0d1117] border border-slate-800 text-white px-6 py-5 rounded-3xl outline-none transition-all font-bold"
-                            onChange={(e) => handleAddressChange('line2', e.target.value)}
-                            value={formData.contactInfo.address.line2}
                           />
                         </div>
                         <div className="space-y-2">
