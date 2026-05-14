@@ -663,7 +663,7 @@ const ProfilePage = () => {
                       info={user.isVerified ? "Locked after verification" : null}
                     />
                     <InputField 
-                      label="Last Name" 
+                      label="Last Name (Optional)" 
                       value={formData.personalInfo?.lastName} 
                       onChange={(val) => handleNestedChange('personalInfo', 'lastName', val)}
                       readOnly={!isEditing || (user.role !== 'admin' && user.isVerified)}

@@ -167,6 +167,27 @@ const EventRegistrationModal = ({ event, onClose, onDashboardUpdate, initialRole
         name: 'HKCA Portal',
         description: `Registration for ${event.title}`,
         order_id: orderId,
+        retry: {
+          enabled: false
+        },
+        config: {
+          display: {
+            blocks: {
+              upi: {
+                name: 'Pay via UPI / QR Code',
+                instruments: [
+                  {
+                    method: 'upi'
+                  }
+                ],
+              },
+            },
+            sequence: ['block.upi'],
+            preferences: {
+              show_default_blocks: false,
+            },
+          },
+        },
         handler: async (response) => {
           setPaymentLoading(true);
           try {

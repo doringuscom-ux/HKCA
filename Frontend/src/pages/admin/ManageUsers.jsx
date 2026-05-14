@@ -229,7 +229,7 @@ const UserProfileModal = ({
             <DetailSection title="Personal Details" icon={RiUserLine}>
               <EditableItem label="First Name" section="personalInfo" field="firstName" value={user.personalInfo?.firstName} isEditingFull={isEditingFull} tempData={tempData} handleFieldChange={handleFieldChange} />
               <EditableItem label="Middle Name" section="personalInfo" field="middleName" value={user.personalInfo?.middleName} isEditingFull={isEditingFull} tempData={tempData} handleFieldChange={handleFieldChange} />
-              <EditableItem label="Last Name" section="personalInfo" field="lastName" value={user.personalInfo?.lastName} isEditingFull={isEditingFull} tempData={tempData} handleFieldChange={handleFieldChange} />
+              <EditableItem label="Last Name (Optional)" section="personalInfo" field="lastName" value={user.personalInfo?.lastName} isEditingFull={isEditingFull} tempData={tempData} handleFieldChange={handleFieldChange} />
               <EditableItem label="Gender" section="personalInfo" field="gender" value={user.personalInfo?.gender} isEditingFull={isEditingFull} tempData={tempData} handleFieldChange={handleFieldChange} />
               <EditableItem label="Birth Date" section="personalInfo" field="birthDate" value={user.personalInfo?.birthDate ? new Date(user.personalInfo.birthDate).toLocaleDateString() : null} isEditingFull={isEditingFull} tempData={tempData} handleFieldChange={handleFieldChange} type="date" />
               <EditableItem label="Blood Group" section="personalInfo" field="bloodGroup" value={user.personalInfo?.bloodGroup} isEditingFull={isEditingFull} tempData={tempData} handleFieldChange={handleFieldChange} />

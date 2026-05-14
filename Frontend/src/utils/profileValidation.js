@@ -20,7 +20,6 @@ export const validateProfileCompletion = (user) => {
   // 1. Basic Personal Info
   if (role !== 'club') {
     if (!user.personalInfo?.firstName) missingFields.push('First Name');
-    if (!user.personalInfo?.lastName) missingFields.push('Last Name');
     if (!user.personalInfo?.gender) missingFields.push('Gender');
     if (!user.personalInfo?.birthDate) missingFields.push('Date of Birth');
     

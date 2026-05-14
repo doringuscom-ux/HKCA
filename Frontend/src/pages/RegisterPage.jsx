@@ -214,7 +214,6 @@ const RegisterPage = () => {
         if (!formData.clubInfo.contactPerson) newErrors.contactPerson = true;
       } else {
         if (!formData.personalInfo.firstName) newErrors.firstName = true;
-        if (!formData.personalInfo.lastName) newErrors.lastName = true;
         if (!formData.personalInfo.gender) newErrors.gender = true;
         if (!formData.personalInfo.birthDate) newErrors.birthDate = true;
         
@@ -467,10 +466,10 @@ const RegisterPage = () => {
                             />
                           </div>
                           <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Last Name</label>
+                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Last Name (Optional)</label>
                             <input 
                               type="text" 
-                              placeholder="Last Name" 
+                              placeholder="Last Name (Optional)" 
                               className={`w-full bg-[#0d1117] border ${errors.lastName ? 'border-red-500' : 'border-slate-800'} text-white px-6 py-5 rounded-3xl outline-none transition-all font-bold`}
                               onChange={(e) => handleInputChange('personalInfo', 'lastName', e.target.value)}
                               value={formData.personalInfo.lastName}
@@ -915,7 +914,7 @@ const RegisterPage = () => {
                           <RiBankCardLine size={24} />
                           <div className="text-left">
                             <p className="font-black text-xs uppercase tracking-widest">Pay Online</p>
-                            <p className="text-[10px] opacity-60">Credit/Debit Card, UPI, Netbanking</p>
+                            <p className="text-[10px] opacity-60">UPI Only (Google Pay, PhonePe, Paytm, etc.)</p>
                           </div>
                         </button>
 
@@ -972,7 +971,6 @@ const RegisterPage = () => {
                                   order_id: data.orderId,
                                   handler: function (response) {
                                     setPaymentDetails(response);
-                                    // Automatically trigger registration submission
                                     handleSubmit(response);
                                   },
                                   prefill: {
@@ -981,6 +979,27 @@ const RegisterPage = () => {
                                   },
                                   theme: {
                                     color: "#2563eb",
+                                  },
+                                  retry: {
+                                    enabled: false
+                                  },
+                                  config: {
+                                    display: {
+                                      blocks: {
+                                        upi: {
+                                          name: 'Pay via UPI / QR Code',
+                                          instruments: [
+                                            {
+                                              method: 'upi'
+                                            }
+                                          ],
+                                        },
+                                      },
+                                      sequence: ['block.upi'],
+                                      preferences: {
+                                        show_default_blocks: false,
+                                      },
+                                    },
                                   },
                                   modal: {
                                     ondismiss: function() {
