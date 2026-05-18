@@ -11,7 +11,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://hkca.onrender.com',
+        target: 'https://hkca.vercel.app',
         changeOrigin: true,
       }
     }
