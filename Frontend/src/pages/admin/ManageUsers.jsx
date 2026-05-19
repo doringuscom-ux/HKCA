@@ -106,6 +106,8 @@ const UserProfileModal = ({
   const [tempData, setTempData] = React.useState(user);
   const [savingEdits, setSavingEdits] = React.useState(false);
   const [editingAchIdx, setEditingAchIdx] = React.useState(null);
+  const [newAdminPassword, setNewAdminPassword] = React.useState('');
+  const [updatingPassword, setUpdatingPassword] = React.useState(false);
 
   const handleFieldChange = (section, field, value) => {
       setTempData(prev => ({
@@ -140,6 +142,24 @@ const UserProfileModal = ({
       } finally {
           setSavingEdits(false);
       }
+  };
+
+  const handleAdminUpdatePassword = async () => {
+    if (!newAdminPassword || newAdminPassword.length < 6) {
+      return alert('Password must be at least 6 characters');
+    }
+    if (!window.confirm('Are you sure you want to change this user\'s password?')) return;
+
+    setUpdatingPassword(true);
+    try {
+      await api.put(`/admin/users/${user._id}/password`, { newPassword: newAdminPassword });
+      alert('Password updated successfully');
+      setNewAdminPassword('');
+    } catch (err) {
+      alert('Failed to update password: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setUpdatingPassword(false);
+    }
   };
 
   return (
@@ -209,7 +229,7 @@ const UserProfileModal = ({
             <DetailSection title="Personal Details" icon={RiUserLine}>
               <EditableItem label="First Name" section="personalInfo" field="firstName" value={user.personalInfo?.firstName} isEditingFull={isEditingFull} tempData={tempData} handleFieldChange={handleFieldChange} />
               <EditableItem label="Middle Name" section="personalInfo" field="middleName" value={user.personalInfo?.middleName} isEditingFull={isEditingFull} tempData={tempData} handleFieldChange={handleFieldChange} />
-              <EditableItem label="Last Name" section="personalInfo" field="lastName" value={user.personalInfo?.lastName} isEditingFull={isEditingFull} tempData={tempData} handleFieldChange={handleFieldChange} />
+              <EditableItem label="Last Name (Optional)" section="personalInfo" field="lastName" value={user.personalInfo?.lastName} isEditingFull={isEditingFull} tempData={tempData} handleFieldChange={handleFieldChange} />
               <EditableItem label="Gender" section="personalInfo" field="gender" value={user.personalInfo?.gender} isEditingFull={isEditingFull} tempData={tempData} handleFieldChange={handleFieldChange} />
               <EditableItem label="Birth Date" section="personalInfo" field="birthDate" value={user.personalInfo?.birthDate ? new Date(user.personalInfo.birthDate).toLocaleDateString() : null} isEditingFull={isEditingFull} tempData={tempData} handleFieldChange={handleFieldChange} type="date" />
               <EditableItem label="Blood Group" section="personalInfo" field="bloodGroup" value={user.personalInfo?.bloodGroup} isEditingFull={isEditingFull} tempData={tempData} handleFieldChange={handleFieldChange} />
@@ -517,6 +537,36 @@ const UserProfileModal = ({
                   </div>
                 </div>
               )}
+            </div>
+          </DetailSection>
+
+          {/* New Section: Security Management */}
+          <DetailSection title="Security Management" icon={RiKeyLine}>
+            <div className="col-span-full bg-red-50/30 border border-red-100 rounded-2xl p-6 space-y-4">
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-red-600 mb-2 ml-1">Force Reset User Password</label>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <input 
+                    type="text" 
+                    placeholder="Enter new secure password"
+                    className="flex-1 px-4 py-3 bg-white border border-red-100 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-red-400 transition-all shadow-sm"
+                    value={newAdminPassword}
+                    onChange={(e) => setNewAdminPassword(e.target.value)}
+                  />
+                  <button 
+                    onClick={handleAdminUpdatePassword}
+                    disabled={updatingPassword || !newAdminPassword}
+                    className="px-6 py-3 bg-red-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-red-700 transition-all shadow-lg shadow-red-200 disabled:opacity-50 flex items-center gap-2 shrink-0"
+                  >
+                    {updatingPassword ? <RiLoader4Line className="animate-spin" /> : <RiKeyLine />}
+                    Update Password
+                  </button>
+                </div>
+                <p className="text-[10px] font-black text-red-600 mt-3 ml-1 italic flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse"></span>
+                  SECURITY PROTOCOL: Use this only if the user has requested a reset via Aadhaar verification.
+                </p>
+              </div>
             </div>
           </DetailSection>
 

@@ -236,10 +236,17 @@ const EventDetailsPage = () => {
 
             {/* Tournament Details Sidebar (Integrated) */}
             <div className="lg:col-span-5 p-8 lg:p-12 bg-white/2">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-lg shadow-emerald-500/50" />
-                <span className="text-emerald-500 text-[10px] font-black uppercase tracking-widest">REGISTRATION OPEN</span>
-              </div>
+              {event.registrationOpen !== false && (!event.registrationDeadline || new Date() <= new Date(event.registrationDeadline)) ? (
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-lg shadow-emerald-500/50" />
+                  <span className="text-emerald-500 text-[10px] font-black uppercase tracking-widest">REGISTRATION OPEN</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-2 h-2 bg-red-500 rounded-full shadow-lg shadow-red-500/50" />
+                  <span className="text-red-500 text-[10px] font-black uppercase tracking-widest">REGISTRATION CLOSED</span>
+                </div>
+              )}
               <h3 className="text-xl font-black text-white mb-8">Tournament Details</h3>
               
               <div className="space-y-6 mb-10">
@@ -269,7 +276,15 @@ const EventDetailsPage = () => {
                   </div>
                   <div>
                     <p className="text-[9px] text-gray-500 font-black uppercase tracking-widest mb-1">STATUS</p>
-                    <p className="text-emerald-500 font-bold text-sm">Registration Open</p>
+                    <p className={`font-bold text-sm ${
+                      (event.registrationOpen !== false && (!event.registrationDeadline || new Date() <= new Date(event.registrationDeadline)))
+                        ? 'text-emerald-500'
+                        : 'text-red-500'
+                    }`}>
+                      {(event.registrationOpen !== false && (!event.registrationDeadline || new Date() <= new Date(event.registrationDeadline)))
+                        ? 'Registration Open'
+                        : 'Registration Closed'}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -297,18 +312,29 @@ const EventDetailsPage = () => {
                   )}
                   <button
                     onClick={() => setIsModalOpen(true)}
-                    disabled={isRegistered || !user.isVerified || (event.registrationDeadline && new Date() > new Date(event.registrationDeadline))}
+                    disabled={
+                      isRegistered || 
+                      !user.isVerified || 
+                      event.registrationOpen === false ||
+                      (event.registrationDeadline && new Date() > new Date(event.registrationDeadline))
+                    }
                     className="w-full py-5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-800 disabled:text-slate-500 disabled:border-slate-700 disabled:cursor-not-allowed text-white rounded-[1.5rem] font-black text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 shadow-2xl shadow-blue-900/30 active:scale-[0.98] border border-transparent"
                   >
-                    {isRegistered ? 'ALREADY JOINED' : 'JOIN EVENT'} <RiArrowRightLine size={18} />
+                    {isRegistered ? 'ALREADY JOINED' : 
+                     (event.registrationOpen === false || (event.registrationDeadline && new Date() > new Date(event.registrationDeadline))) 
+                       ? 'REGISTRATION CLOSED' 
+                       : 'JOIN EVENT'} <RiArrowRightLine size={18} />
                   </button>
                 </>
               ) : (
                 <button
                   onClick={() => navigate('/login')}
-                  className="w-full py-5 bg-white text-black hover:bg-gray-100 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 shadow-2xl shadow-black/20"
+                  disabled={event.registrationOpen === false || (event.registrationDeadline && new Date() > new Date(event.registrationDeadline))}
+                  className="w-full py-5 bg-white text-black hover:bg-gray-100 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed rounded-[1.5rem] font-black text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 shadow-2xl shadow-black/20"
                 >
-                  LOGIN TO JOIN <RiArrowRightLine size={18} />
+                  {(event.registrationOpen === false || (event.registrationDeadline && new Date() > new Date(event.registrationDeadline))) 
+                    ? 'REGISTRATION CLOSED' 
+                    : 'LOGIN TO JOIN'} <RiArrowRightLine size={18} />
                 </button>
               )}
             </div>

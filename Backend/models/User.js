@@ -31,13 +31,13 @@ const userSchema = new mongoose.Schema({
   },
   personalInfo: {
     firstName: String,
-    middleName: String,
     lastName: String,
     gender: String,
     birthDate: Date,
     bloodGroup: String,
     aadhaarNumber: {
       type: String,
+      required: [true, 'Please provide your Aadhaar number'],
       match: [/^\d{12}$/, 'Aadhaar number must be exactly 12 digits']
     },
   },
@@ -50,11 +50,11 @@ const userSchema = new mongoose.Schema({
     email: String,
     phone: {
       type: String,
+      required: [true, 'Please provide your phone number'],
       match: [/^\d{10}$/, 'Phone number must be exactly 10 digits']
     },
     address: {
       line1: String,
-      line2: String,
       pinCode: {
         type: String,
         match: [/^\d{6}$/, 'PIN code must be exactly 6 digits']
@@ -65,20 +65,23 @@ const userSchema = new mongoose.Schema({
       village: String,
       postOffice: String,
     },
-    participatingUnit: String,
-    emergencyContact: {
-      type: String,
-      match: [/^\d{10}$/, 'Emergency contact must be a valid 10-digit number']
-    },
   },
   documents: {
     photograph: String,
     dobProof: String,
-    aadhaarFront: String,
-    aadhaarBack: String,
+    aadhaarFront: {
+      type: String,
+      required: [true, 'Please upload Aadhaar card front image'],
+    },
+    aadhaarBack: {
+      type: String,
+      required: [true, 'Please upload Aadhaar card back image'],
+    },
     idProof: String,
     addressProof: String,
     signature: String,
+    clubLogo: String,
+    clubLegalDoc: String,
   },
   isRegistered: {
     type: Boolean,

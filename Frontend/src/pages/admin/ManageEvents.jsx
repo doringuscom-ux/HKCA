@@ -54,6 +54,7 @@ const ManageEvents = () => {
   });
   const [duration, setDuration] = useState('');
   const [mapUrl, setMapUrl] = useState('');
+  const [registrationOpen, setRegistrationOpen] = useState(true);
 
   // Participant Management State
   const [showParticipantsModal, setShowParticipantsModal] = useState(false);
@@ -136,6 +137,13 @@ const ManageEvents = () => {
     } catch (err) {
       alert('Failed to cancel registration: ' + (err.response?.data?.message || err.message));
     }
+  };  const handleToggleRegistration = async (id) => {
+    try {
+      const response = await api.put(`/admin/events/${id}/toggle-registration`);
+      setItems(prevItems => prevItems.map(item => item._id === id ? response.data : item));
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to toggle registration status');
+    }
   };
 
   const handleFileChange = (e) => {
@@ -154,6 +162,7 @@ const ManageEvents = () => {
     setFile(null);
     setIsUpload(false);
     setStatus('published');
+    setRegistrationOpen(true);
     setPricing({
       athlete: 200,
       coach: 500,
@@ -179,6 +188,7 @@ const ManageEvents = () => {
     setIsUpload(false);
     setFile(null);
     setStatus(event.status || 'published');
+    setRegistrationOpen(event.registrationOpen !== false);
     setPricing(event.pricing || {
       athlete: 200,
       coach: 500,
@@ -203,6 +213,7 @@ const ManageEvents = () => {
     formData.append('imageUrl', imageUrl);
     formData.append('isUpload', isUpload);
     formData.append('status', status);
+    formData.append('registrationOpen', registrationOpen);
     formData.append('pricing', JSON.stringify(pricing));
     formData.append('duration', duration);
     formData.append('mapUrl', mapUrl);
@@ -398,6 +409,26 @@ const ManageEvents = () => {
             </div>
 
             <div className="space-y-4">
+              <label className="text-sm font-semibold text-gray-700 ml-1">Registration Status</label>
+              <div className="flex p-1 bg-gray-100 rounded-2xl w-full">
+                <button
+                  type="button"
+                  onClick={() => setRegistrationOpen(true)}
+                  className={`flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-bold transition-all ${registrationOpen ? 'bg-white text-green-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  <RiCheckboxCircleLine size={18} /> Open
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRegistrationOpen(false)}
+                  className={`flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-bold transition-all ${!registrationOpen ? 'bg-white text-red-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  <RiCloseCircleLine size={18} /> Closed
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-4">
               <label className="text-sm font-semibold text-gray-700 ml-1 flex items-center gap-2">
                 Banner Image
                 {isEditing && <span className="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-bold">Keep current if no change</span>}
@@ -547,18 +578,39 @@ const ManageEvents = () => {
                       <RiMapPin2Line size={14} className="text-blue-600" />
                       <span className="truncate max-w-[120px]">{item.location}</span>
                     </span>
+                    {item.registrationOpen !== false ? (
+                      <span className="flex items-center gap-1.5 bg-green-50 text-green-700 px-2.5 py-1.5 rounded-lg border border-green-200 shadow-sm">
+                        <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                        Reg: Open
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1.5 bg-red-50 text-red-700 px-2.5 py-1.5 rounded-lg border border-red-200 shadow-sm">
+                        <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                        Reg: Closed
+                      </span>
+                    )}
                   </div>
                   <p className="text-sm text-gray-500 mt-4 line-clamp-2 leading-relaxed font-medium italic">
                     {item.description}
                   </p>
                 </div>
 
-                <div className="mt-6 flex items-center gap-2 pt-4 border-t border-gray-100">
+                <div className="mt-6 flex flex-wrap items-center gap-2 pt-4 border-t border-gray-100">
                   <button
                     onClick={() => fetchParticipants(item)}
                     className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-50 text-gray-600 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition-all text-xs"
                   >
                     <RiGroupLine size={16} /> Participants
+                  </button>
+                  <button
+                    onClick={() => handleToggleRegistration(item._id)}
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-all text-xs border ${
+                      item.registrationOpen !== false
+                        ? 'bg-red-50/50 text-red-600 border-red-100 hover:bg-red-600 hover:text-white'
+                        : 'bg-green-50 text-green-600 border-green-100 hover:bg-green-600 hover:text-white'
+                    }`}
+                  >
+                    {item.registrationOpen !== false ? 'Close Reg.' : 'Open Reg.'}
                   </button>
                   <button
                     onClick={() => handleEdit(item)}

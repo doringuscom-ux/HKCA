@@ -302,6 +302,11 @@ router.post('/events', protect, adminGuard, upload.single('image'), async (req, 
       }
     }
 
+    let registrationOpen = true;
+    if (req.body.registrationOpen !== undefined) {
+      registrationOpen = req.body.registrationOpen === 'true' || req.body.registrationOpen === true;
+    }
+
     const newEvent = await Event.create({
       title,
       description,
@@ -311,6 +316,7 @@ router.post('/events', protect, adminGuard, upload.single('image'), async (req, 
       imageUrl: finalImageUrl,
       cloudinaryId,
       status: status || 'published',
+      registrationOpen,
       pricing,
       duration,
       mapUrl,
@@ -362,6 +368,10 @@ router.put('/events/:id', protect, adminGuard, upload.single('image'), async (re
       }
     }
 
+    if (req.body.registrationOpen !== undefined) {
+      event.registrationOpen = req.body.registrationOpen === 'true' || req.body.registrationOpen === true;
+    }
+
     event.title = title || event.title;
     event.description = description || event.description;
     event.date = date || event.date;
@@ -373,6 +383,22 @@ router.put('/events/:id', protect, adminGuard, upload.single('image'), async (re
     event.duration = duration || event.duration;
     event.mapUrl = mapUrl || event.mapUrl;
 
+    const updatedEvent = await event.save();
+    res.json(updatedEvent);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Toggle event registration status
+// @route   PUT /api/admin/events/:id/toggle-registration
+// @access  Private (Admin only)
+router.put('/events/:id/toggle-registration', protect, adminGuard, async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+    if (!event) return res.status(404).json({ message: 'Event not found' });
+
+    event.registrationOpen = event.registrationOpen === false ? true : false;
     const updatedEvent = await event.save();
     res.json(updatedEvent);
   } catch (error) {
@@ -678,6 +704,27 @@ router.put('/users/:id/message', protect, adminGuard, async (req, res) => {
   }
 });
 
+// @desc    Admin update user password
+// @route   PUT /api/admin/users/:id/password
+// @access  Private (Admin only)
+router.put('/users/:id/password', protect, adminGuard, async (req, res) => {
+  const { newPassword } = req.body;
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters long' });
+    }
+
+    user.password = newPassword;
+    await user.save();
+    res.json({ message: 'User password updated successfully by admin' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // @desc    Admin Edit User Profile (Any field)
 // @route   PUT /api/admin/users/:id/profile
 // @access  Private (Admin only)
@@ -792,14 +839,14 @@ router.post('/registration-codes', protect, adminGuard, async (req, res) => {
   try {
     // Generate a simple unique code
     const code = Math.random().toString(36).substring(2, 10).toUpperCase();
-    
+
     const newCode = await RegistrationCode.create({
       code,
       email,
       role,
       generatedBy: req.user._id
     });
-    
+
     res.status(201).json(newCode);
   } catch (error) {
     res.status(500).json({ message: error.message });

@@ -38,6 +38,11 @@ router.post('/register/:id', protect, async (req, res, next) => {
     const event = await Event.findById(eventId);
     if (!event) return res.status(404).json({ message: 'Event not found' });
 
+    // Enforce Registration Toggle
+    if (event.registrationOpen === false) {
+      return res.status(400).json({ message: 'Registration for this event has been closed by the administrator' });
+    }
+
     // Enforce Registration Deadline
     if (new Date() > new Date(event.registrationDeadline)) {
       return res.status(400).json({ message: 'Registration for this event has closed' });
@@ -106,6 +111,11 @@ router.post('/quick-register/:id', async (req, res, next) => {
   try {
     const event = await Event.findById(eventId);
     if (!event) return res.status(404).json({ message: 'Event not found' });
+
+    // Enforce Registration Toggle
+    if (event.registrationOpen === false) {
+      return res.status(400).json({ message: 'Registration for this event has been closed by the administrator' });
+    }
 
     // Enforce Registration Deadline
     if (new Date() > new Date(event.registrationDeadline)) {
