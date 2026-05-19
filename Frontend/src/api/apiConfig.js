@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const isLocal = 'https://hkca.vercel.app/api'
+const isLocal = 'https://hkca.vercel.app/api';
 // window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 const API_URL = isLocal
   ? 'https://hkca.vercel.app/api'

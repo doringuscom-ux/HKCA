@@ -595,35 +595,39 @@ const ManageEvents = () => {
                   </p>
                 </div>
 
-                <div className="mt-6 flex flex-wrap items-center gap-2 pt-4 border-t border-gray-100">
-                  <button
-                    onClick={() => fetchParticipants(item)}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-50 text-gray-600 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition-all text-xs"
-                  >
-                    <RiGroupLine size={16} /> Participants
-                  </button>
-                  <button
-                    onClick={() => handleToggleRegistration(item._id)}
-                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-all text-xs border ${
-                      item.registrationOpen !== false
-                        ? 'bg-red-50/50 text-red-600 border-red-100 hover:bg-red-600 hover:text-white'
-                        : 'bg-green-50 text-green-600 border-green-100 hover:bg-green-600 hover:text-white'
-                    }`}
-                  >
-                    {item.registrationOpen !== false ? 'Close Reg.' : 'Open Reg.'}
-                  </button>
-                  <button
-                    onClick={() => handleEdit(item)}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-50 text-gray-600 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition-all text-xs"
-                  >
-                    <RiEditLine size={16} /> Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(item._id)}
-                    className="px-4 py-2.5 bg-red-50 text-red-600 rounded-xl font-bold hover:bg-red-600 hover:text-white transition-all"
-                  >
-                    <RiDeleteBin7Line size={16} />
-                  </button>
+                <div className="mt-6 space-y-2 pt-4 border-t border-gray-100">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => fetchParticipants(item)}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-50 text-gray-600 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition-all text-xs"
+                    >
+                      <RiGroupLine size={16} /> Participants
+                    </button>
+                    <button
+                      onClick={() => handleToggleRegistration(item._id)}
+                      className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-all text-xs border ${
+                        item.registrationOpen !== false
+                          ? 'bg-red-50/50 text-red-600 border-red-100 hover:bg-red-600 hover:text-white'
+                          : 'bg-green-50 text-green-600 border-green-100 hover:bg-green-600 hover:text-white'
+                      }`}
+                    >
+                      {item.registrationOpen !== false ? 'Close Reg.' : 'Open Reg.'}
+                    </button>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEdit(item)}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-50 text-gray-600 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition-all text-xs"
+                    >
+                      <RiEditLine size={16} /> Edit Event
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item._id)}
+                      className="px-4 py-2.5 bg-red-50 text-red-600 rounded-xl font-bold hover:bg-red-600 hover:text-white transition-all"
+                    >
+                      <RiDeleteBin7Line size={16} />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
