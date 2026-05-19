@@ -1343,10 +1343,17 @@ const ProfilePage = () => {
                                 {reg.allowReapply ? (
                                   <button
                                     onClick={() => handleReapply(reg.event?._id, reg.role)}
-                                    disabled={loading}
-                                    className="px-8 py-4 bg-blue-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 shadow-xl shadow-blue-500/20 transition-all disabled:opacity-50 shrink-0"
+                                    disabled={
+                                      loading || 
+                                      reg.event?.registrationOpen === false ||
+                                      (reg.event?.registrationDeadline && new Date() > new Date(reg.event?.registrationDeadline))
+                                    }
+                                    className="px-8 py-4 bg-blue-600 disabled:bg-slate-800 disabled:text-slate-500 disabled:shadow-none text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 shadow-xl shadow-blue-500/20 transition-all disabled:opacity-50 shrink-0"
                                   >
-                                    {loading ? 'Processing...' : 'Fix & Re-Apply'}
+                                    {loading ? 'Processing...' : 
+                                     (reg.event?.registrationOpen === false || (reg.event?.registrationDeadline && new Date() > new Date(reg.event?.registrationDeadline)))
+                                       ? 'Closed'
+                                       : 'Fix & Re-Apply'}
                                   </button>
                                 ) : (
                                   <a

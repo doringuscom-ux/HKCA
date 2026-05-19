@@ -113,6 +113,11 @@ const EventRegistrationModal = ({ event, onClose, onDashboardUpdate, initialRole
       return;
     }
 
+    if (event.registrationOpen === false || (event.registrationDeadline && new Date() > new Date(event.registrationDeadline))) {
+      setError('Registration for this event is closed.');
+      return;
+    }
+
     // For logged in users, check verification
     if (user) {
       const validation = validateProfileCompletion(user);
@@ -507,12 +512,17 @@ const EventRegistrationModal = ({ event, onClose, onDashboardUpdate, initialRole
                         <RiArrowLeftLine /> Back
                       </button>
                       <button
-                        disabled={loading || paymentLoading || (event.registrationDeadline && new Date() > new Date(event.registrationDeadline))}
+                        disabled={
+                          loading || 
+                          paymentLoading || 
+                          event.registrationOpen === false ||
+                          (event.registrationDeadline && new Date() > new Date(event.registrationDeadline))
+                        }
                         onClick={handleRegister}
                         className="flex-[2] py-6 bg-slate-900 text-white rounded-3xl font-black uppercase tracking-[0.2em] text-[11px] shadow-2xl shadow-slate-200 hover:bg-blue-600 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-3"
                       >
                         {(loading || paymentLoading) ? <RiLoader4Line className="animate-spin" size={20} /> :
-                          (event.registrationDeadline && new Date() > new Date(event.registrationDeadline)) ? (
+                          (event.registrationOpen === false || (event.registrationDeadline && new Date() > new Date(event.registrationDeadline))) ? (
                             <>Registration Closed</>
                           ) : (
                             <>

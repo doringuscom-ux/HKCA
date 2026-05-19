@@ -33,6 +33,10 @@ const eventSchema = new mongoose.Schema({
     enum: ['draft', 'published'],
     default: 'published',
   },
+  registrationOpen: {
+    type: Boolean,
+    default: true,
+  },
   pricing: {
     athlete: { type: Number, default: 200 },
     coach: { type: Number, default: 500 },
