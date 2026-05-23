@@ -4,21 +4,15 @@ const EventRegistration = require('../models/EventRegistration');
 const User = require('../models/User');
 const Event = require('../models/Event');
 
-// Middleware to protect routes
-const protect = (req, res, next) => {
-  if (req.session.userId) {
-    next();
-  } else {
-    res.status(401).json({ message: 'Not authorized, please login' });
-  }
-};
+const jwt = require('jsonwebtoken');
+const { protect } = require('../middleware/auth');
 
 // @desc    Get user's event registrations
 // @route   GET /api/user-events/my-registrations
 // @access  Private
 router.get('/my-registrations', protect, async (req, res, next) => {
   try {
-    const registrations = await EventRegistration.find({ user: req.session.userId })
+    const registrations = await EventRegistration.find({ user: req.user._id })
       .populate('event')
       .sort('-createdAt');
     res.json(registrations);
@@ -51,7 +45,7 @@ router.post('/register/:id', protect, async (req, res, next) => {
     // Check for existing active registration (confirmed or pending) for THIS EVENT
     const activeReg = await EventRegistration.findOne({ 
       event: eventId, 
-      user: req.session.userId,
+      user: req.user._id,
       status: { $in: ['confirmed', 'pending'] }
     });
 
@@ -62,7 +56,7 @@ router.post('/register/:id', protect, async (req, res, next) => {
     // Check for cancelled registration to decide between New Ticket vs Re-apply
     const cancelledReg = await EventRegistration.findOne({
       event: eventId,
-      user: req.session.userId,
+      user: req.user._id,
       role,
       status: 'cancelled'
     });
@@ -90,7 +84,7 @@ router.post('/register/:id', protect, async (req, res, next) => {
     // New Ticket Logic: Create a brand new record
     const registration = await EventRegistration.create({
       event: eventId,
-      user: req.session.userId,
+      user: req.user._id,
       role,
       status: 'confirmed' // Only directly confirm if it's FREE
     });
@@ -141,40 +135,16 @@ router.post('/quick-register/:id', async (req, res, next) => {
       isRegistered: true
     });
 
-    // 3. Set Session
-    req.session.userId = user._id;
-
-    // Check for pricing. If price > 0, direct registration is not allowed.
-    // Map viewer role to spectator for price check
-    const pricingKey = role === 'viewer' ? 'spectator' : role;
-    const price = event.pricing[pricingKey] || 0;
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'supersecretkey', { expiresIn: '30d' });
     
-    if (price > 0) {
-      return res.status(400).json({ 
-        message: 'This is a paid event. Please use the normal guest checkout flow.',
-        isPaid: true 
-      });
-    }
-
-    // 4. Create Event Registration
-    const registration = await EventRegistration.create({
-      event: eventId,
-      user: user._id,
-      role,
-      status: 'confirmed'
-    });
-
-    req.session.save((err) => {
-      if (err) return res.status(500).json({ message: 'Session initialization failed' });
-      
-      const userObj = user.toObject();
-      delete userObj.password;
-      
-      res.status(201).json({ 
-        message: 'Account created and registered successfully',
-        user: userObj, 
-        registration 
-      });
+    const userObj = user.toObject();
+    delete userObj.password;
+    
+    res.status(201).json({ 
+      message: 'Account created and registered successfully',
+      user: userObj, 
+      token,
+      registration 
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -189,7 +159,7 @@ router.post('/cancel/:id', protect, async (req, res) => {
   try {
     const registration = await EventRegistration.findOne({
       _id: req.params.id,
-      user: req.session.userId
+      user: req.user._id
     }).populate('event');
 
     if (!registration) {
