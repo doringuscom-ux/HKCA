@@ -6,8 +6,6 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const connectDB = require('./config/db');
-const session = require('express-session');
-const MongoStore = require('connect-mongo').MongoStore;
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
 const { startHeartbeat } = require('./utils/heartbeat');
@@ -22,10 +20,7 @@ connectDB().then(() => {
 const app = express();
 app.set('trust proxy', 1); // Trust first proxy (Render)
 
-const store = MongoStore.create({
-  mongoUrl: process.env.MONGO_URI,
-  collectionName: 'sessions',
-});
+// Session and MongoStore removed
 
 // Middleware
 app.use(express.json({ limit: '25mb' }));
@@ -42,23 +37,7 @@ app.use(cors({
   credentials: true,
 }));
 
-// Session configuration
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || 'supersecretkey',
-    resave: true, // Forces the session to be saved back to the session store
-    saveUninitialized: false,
-    rolling: true, // Force cookie set on every response, which resets the maxAge
-    store: store,
-    proxy: true, // Add this for Render
-    cookie: {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', 
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', 
-      maxAge: 1000 * 60 * 60 * 24, // 1 day
-    },
-  })
-);
+// Session middleware removed
 
 // Routes
 app.use('/api/auth', authRoutes);

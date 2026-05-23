@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const jwt = require('jsonwebtoken');
+const { protect } = require('../middleware/auth');
 const User = require('../models/User');
 const GlobalSettings = require('../models/GlobalSettings');
 const RegistrationCode = require('../models/RegistrationCode');
@@ -142,15 +144,11 @@ router.post('/register', async (req, res, next) => {
     }
 
     if (user) {
-      req.session.userId = user._id;
-      req.session.save((err) => {
-        if (err) return res.status(500).json({ message: 'Session save error' });
-
-        // Return full user object for immediate profile access
-        const userObj = user.toObject();
-        delete userObj.password;
-        res.status(201).json(userObj);
-      });
+      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'supersecretkey', { expiresIn: '30d' });
+      // Return full user object for immediate profile access
+      const userObj = user.toObject();
+      delete userObj.password;
+      res.status(201).json({ ...userObj, token });
     }
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -160,12 +158,9 @@ router.post('/register', async (req, res, next) => {
 // @desc    Update user profile
 // @route   PUT /api/auth/profile
 // @access  Private
-router.put('/profile', async (req, res, next) => {
+router.put('/profile', protect, async (req, res, next) => {
   try {
-    if (!req.session.userId) {
-      return res.status(401).json({ message: 'Not authenticated' });
-    }
-    const user = await User.findById(req.session.userId);
+    const user = await User.findById(req.user._id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -178,7 +173,7 @@ router.put('/profile', async (req, res, next) => {
           { 'personalInfo.phone': newPhone },
           { 'contactInfo.phone': newPhone }
         ],
-        _id: { $ne: req.session.userId }
+        _id: { $ne: req.user._id }
       });
       if (phoneExists) {
         return res.status(400).json({ message: 'This phone number is already being used by another member.' });
@@ -215,15 +210,11 @@ router.post('/login', async (req, res, next) => {
     }).select('+password');
 
     if (user && (await user.matchPassword(password))) {
-      req.session.userId = user._id;
-      req.session.save((err) => {
-        if (err) return res.status(500).json({ message: 'Session save error' });
-
-        // Return full user object for immediate profile access
-        const userObj = user.toObject();
-        delete userObj.password;
-        res.json(userObj);
-      });
+      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'supersecretkey', { expiresIn: '30d' });
+      // Return full user object for immediate profile access
+      const userObj = user.toObject();
+      delete userObj.password;
+      res.json({ ...userObj, token });
     } else {
       res.status(401).json({ message: 'Invalid credentials' });
     }
@@ -236,29 +227,19 @@ router.post('/login', async (req, res, next) => {
 // @route   POST /api/auth/logout
 // @access  Private
 router.post('/logout', (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).json({ message: 'Could not log out' });
-    }
-    res.clearCookie('connect.sid');
-    res.json({ message: 'Logged out' });
-  });
+  res.json({ message: 'Logged out' });
 });
 
 // @desc    Get current user status
 // @route   GET /api/auth/me
 // @access  Private
-router.get('/me', async (req, res, next) => {
+router.get('/me', protect, async (req, res, next) => {
   try {
-    if (req.session.userId) {
-      const user = await User.findById(req.session.userId);
-      if (user) {
-        res.json(user); // Return full user object for profile access
-      } else {
-        res.status(404).json({ message: 'User not found' });
-      }
+    const user = req.user;
+    if (user) {
+      res.json(user); // Return full user object for profile access
     } else {
-      res.status(401).json({ message: 'Not authenticated' });
+        res.status(404).json({ message: 'User not found' });
     }
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -268,10 +249,9 @@ router.get('/me', async (req, res, next) => {
 // @desc    Request Password Change OTP
 // @route   POST /api/auth/request-password-otp
 // @access  Private
-router.post('/request-password-otp', async (req, res, next) => {
+router.post('/request-password-otp', protect, async (req, res, next) => {
   try {
-    if (!req.session.userId) return res.status(401).json({ message: 'Not authenticated' });
-    const user = await User.findById(req.session.userId);
+    const user = req.user;
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     // Generate 6 digit OTP
@@ -295,12 +275,10 @@ router.post('/request-password-otp', async (req, res, next) => {
 // @desc    Change Password with OTP
 // @route   POST /api/auth/change-password
 // @access  Private
-router.post('/change-password', async (req, res, next) => {
+router.post('/change-password', protect, async (req, res, next) => {
   try {
-    if (!req.session.userId) return res.status(401).json({ message: 'Not authenticated' });
-
     const { oldPassword, newPassword, otp } = req.body;
-    const user = await User.findById(req.session.userId).select('+password');
+    const user = await User.findById(req.user._id).select('+password');
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     let verified = false;

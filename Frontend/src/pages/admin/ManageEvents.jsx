@@ -26,7 +26,8 @@ import {
   RiUserHeartLine,
   RiInformationLine,
   RiHome4Line,
-  RiShieldUserLine
+  RiShieldUserLine,
+  RiFileExcel2Line
 } from 'react-icons/ri';
 
 const ManageEvents = () => {
@@ -112,6 +113,102 @@ const ManageEvents = () => {
     } finally {
       setParticipantsLoading(false);
     }
+  };
+
+  const exportToCSV = () => {
+    if (!filteredParticipants || filteredParticipants.length === 0) {
+      alert("No participants to export.");
+      return;
+    }
+
+    const headers = [
+      "First Name",
+      "Last Name",
+      "Email",
+      "Phone",
+      "Role",
+      "Gender",
+      "Birth Date",
+      "Blood Group",
+      "Aadhaar Number",
+      "Father Name",
+      "Mother Name",
+      "Address",
+      "City",
+      "District",
+      "State",
+      "PIN Code",
+      "Amount Paid (Rs)",
+      "Payment Status",
+      "Registration Status",
+      "Registration Date"
+    ];
+
+    const csvRows = [headers.join(",")];
+
+    filteredParticipants.forEach(reg => {
+      const u = reg.user || {};
+      const pi = u.personalInfo || {};
+      const ci = u.contactInfo || {};
+      const gi = u.guardianInfo || {};
+      const addr = ci.address || {};
+
+      const firstName = pi.firstName || "";
+      const lastName = pi.lastName || "";
+      const email = u.email || "";
+      const phone = ci.phone || "";
+      const role = reg.role || "";
+      const gender = pi.gender || "";
+      const birthDate = pi.birthDate ? new Date(pi.birthDate).toLocaleDateString() : "";
+      const bloodGroup = pi.bloodGroup || "";
+      const aadhaarNumber = pi.aadhaarNumber || "";
+      const fatherName = gi.fatherName || "";
+      const motherName = gi.motherName || "";
+      const address = addr.line1 ? addr.line1.replace(/,/g, " ") : "";
+      const city = addr.city || "";
+      const district = addr.district || "";
+      const state = addr.state || "";
+      const pinCode = addr.pinCode || "";
+      
+      const amountPaid = reg.amountPaid || 0;
+      const paymentStatus = reg.paymentStatus || "pending";
+      const status = reg.status || "";
+      const regDate = reg.registrationDate ? new Date(reg.registrationDate).toLocaleDateString() : "";
+
+      const row = [
+        `"${firstName}"`,
+        `"${lastName}"`,
+        `"${email}"`,
+        `"${phone}"`,
+        `"${role}"`,
+        `"${gender}"`,
+        `"${birthDate}"`,
+        `"${bloodGroup}"`,
+        `"${aadhaarNumber}"`,
+        `"${fatherName}"`,
+        `"${motherName}"`,
+        `"${address}"`,
+        `"${city}"`,
+        `"${district}"`,
+        `"${state}"`,
+        `"${pinCode}"`,
+        `"${amountPaid}"`,
+        `"${paymentStatus}"`,
+        `"${status}"`,
+        `"${regDate}"`
+      ];
+      csvRows.push(row.join(","));
+    });
+
+    const csvContent = csvRows.join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `${selectedEvent?.title || "Event"}_Registrations.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleCancelClick = (registrationId) => {
@@ -595,35 +692,39 @@ const ManageEvents = () => {
                   </p>
                 </div>
 
-                <div className="mt-6 flex flex-wrap items-center gap-2 pt-4 border-t border-gray-100">
-                  <button
-                    onClick={() => fetchParticipants(item)}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-50 text-gray-600 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition-all text-xs"
-                  >
-                    <RiGroupLine size={16} /> Participants
-                  </button>
-                  <button
-                    onClick={() => handleToggleRegistration(item._id)}
-                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-all text-xs border ${
-                      item.registrationOpen !== false
-                        ? 'bg-red-50/50 text-red-600 border-red-100 hover:bg-red-600 hover:text-white'
-                        : 'bg-green-50 text-green-600 border-green-100 hover:bg-green-600 hover:text-white'
-                    }`}
-                  >
-                    {item.registrationOpen !== false ? 'Close Reg.' : 'Open Reg.'}
-                  </button>
-                  <button
-                    onClick={() => handleEdit(item)}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-50 text-gray-600 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition-all text-xs"
-                  >
-                    <RiEditLine size={16} /> Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(item._id)}
-                    className="px-4 py-2.5 bg-red-50 text-red-600 rounded-xl font-bold hover:bg-red-600 hover:text-white transition-all"
-                  >
-                    <RiDeleteBin7Line size={16} />
-                  </button>
+                <div className="mt-6 space-y-2 pt-4 border-t border-gray-100">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => fetchParticipants(item)}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-50 text-gray-600 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition-all text-xs"
+                    >
+                      <RiGroupLine size={16} /> Participants
+                    </button>
+                    <button
+                      onClick={() => handleToggleRegistration(item._id)}
+                      className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-all text-xs border ${
+                        item.registrationOpen !== false
+                          ? 'bg-red-50/50 text-red-600 border-red-100 hover:bg-red-600 hover:text-white'
+                          : 'bg-green-50 text-green-600 border-green-100 hover:bg-green-600 hover:text-white'
+                      }`}
+                    >
+                      {item.registrationOpen !== false ? 'Close Reg.' : 'Open Reg.'}
+                    </button>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEdit(item)}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-50 text-gray-600 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition-all text-xs"
+                    >
+                      <RiEditLine size={16} /> Edit Event
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item._id)}
+                      className="px-4 py-2.5 bg-red-50 text-red-600 rounded-xl font-bold hover:bg-red-600 hover:text-white transition-all"
+                    >
+                      <RiDeleteBin7Line size={16} />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -654,12 +755,22 @@ const ManageEvents = () => {
                 </h2>
                 <p className="text-gray-500 text-sm font-medium mt-1">Reviewing {participants.length} registered members</p>
               </div>
-              <button 
-                onClick={() => setShowParticipantsModal(false)}
-                className="p-3 hover:bg-gray-200 rounded-2xl transition-all text-gray-400 hover:text-gray-900"
-              >
-                <RiCloseCircleLine size={28} />
-              </button>
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={exportToCSV}
+                  className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all text-sm flex items-center gap-2 shadow-sm"
+                  title="Export to Excel / CSV"
+                >
+                  <RiFileExcel2Line size={20} />
+                  Export
+                </button>
+                <button 
+                  onClick={() => setShowParticipantsModal(false)}
+                  className="p-3 hover:bg-gray-200 rounded-2xl transition-all text-gray-400 hover:text-gray-900"
+                >
+                  <RiCloseCircleLine size={28} />
+                </button>
+              </div>
             </div>
 
             {/* Modal Body */}
