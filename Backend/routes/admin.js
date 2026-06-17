@@ -929,7 +929,7 @@ router.get('/coupons', protect, adminGuard, async (req, res) => {
 // @route   POST /api/admin/coupons
 // @access  Private (Admin only)
 router.post('/coupons', protect, adminGuard, async (req, res) => {
-  const { code, discountType, discountValue, minPurchase, expiryDate, usageLimit } = req.body;
+  const { code, discountType, discountValue, minPurchase, expiryDate, usageLimit, applicableFor } = req.body;
   try {
     const couponExists = await Coupon.findOne({ code: code.toUpperCase() });
     if (couponExists) {
@@ -943,6 +943,7 @@ router.post('/coupons', protect, adminGuard, async (req, res) => {
       minPurchase,
       expiryDate,
       usageLimit,
+      applicableFor: applicableFor || 'All',
       restrictedEmail: req.body.restrictedEmail
     });
 

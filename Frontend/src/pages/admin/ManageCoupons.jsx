@@ -28,6 +28,7 @@ const ManageCoupons = () => {
   const [expiryDate, setExpiryDate] = useState('');
   const [usageLimit, setUsageLimit] = useState(1);
   const [restrictedEmail, setRestrictedEmail] = useState('');
+  const [applicableFor, setApplicableFor] = useState('All');
 
   useEffect(() => {
     fetchCoupons();
@@ -56,6 +57,7 @@ const ManageCoupons = () => {
         discountValue: Number(discountValue),
         expiryDate,
         usageLimit: Number(usageLimit),
+        applicableFor,
         restrictedEmail: restrictedEmail || null
       });
       
@@ -63,6 +65,7 @@ const ManageCoupons = () => {
       setDiscountValue('');
       setExpiryDate('');
       setRestrictedEmail('');
+      setApplicableFor('All');
       fetchCoupons();
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create coupon');
@@ -185,6 +188,19 @@ const ManageCoupons = () => {
                 />
               </div>
 
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-700 ml-1">Applicable For</label>
+                <select
+                  value={applicableFor}
+                  onChange={(e) => setApplicableFor(e.target.value)}
+                  className="block w-full rounded-2xl border-gray-200 bg-gray-50 p-4 text-gray-900 focus:bg-white focus:border-blue-600 outline-none border font-bold"
+                >
+                  <option value="All">All (Events & Documents)</option>
+                  <option value="Events">Event Registration Only</option>
+                  <option value="Documents">Document Verification Only</option>
+                </select>
+              </div>
+
               {error && (
                 <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 p-4 rounded-xl border border-red-100">
                   <RiErrorWarningLine size={18} />
@@ -253,6 +269,12 @@ const ManageCoupons = () => {
                       <div className="flex items-center gap-2 text-[10px] font-bold text-blue-600 uppercase tracking-wider bg-blue-50/50 p-2 rounded-xl border border-blue-100/50">
                         <RiMailLine size={14} />
                         Restricted: {coupon.restrictedEmail}
+                      </div>
+                    )}
+                    {coupon.applicableFor && coupon.applicableFor !== 'All' && (
+                      <div className="flex items-center gap-2 text-[10px] font-bold text-purple-600 uppercase tracking-wider bg-purple-50/50 p-2 rounded-xl border border-purple-100/50">
+                        <RiTicketLine size={14} />
+                        Only for: {coupon.applicableFor}
                       </div>
                     )}
                   </div>

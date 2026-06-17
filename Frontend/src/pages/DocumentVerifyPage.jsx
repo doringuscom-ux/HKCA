@@ -73,7 +73,7 @@ const DocumentVerifyPage = () => {
     setIsApplyingCoupon(true);
     setCouponError('');
     try {
-      const { data } = await api.get(`/payment/validate-coupon/${couponCode}`);
+      const { data } = await api.get(`/payment/validate-coupon/${couponCode}?context=Documents`);
       setAppliedCoupon(data);
       let discount = 0;
       if (data.discountType === 'fixed') {

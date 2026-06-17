@@ -36,11 +36,16 @@ router.get('/get-price/:eventId', protect, async (req, res) => {
 // @route   GET /api/payment/validate-coupon/:code
 // @access  Private
 router.get('/validate-coupon/:code', protect, async (req, res) => {
+  const { context } = req.query;
   try {
     const coupon = await Coupon.findOne({ code: req.params.code.toUpperCase(), isActive: true });
 
     if (!coupon) {
       return res.status(404).json({ message: 'Invalid or inactive coupon code' });
+    }
+
+    if (coupon.applicableFor && coupon.applicableFor !== 'All' && context && coupon.applicableFor !== context) {
+      return res.status(400).json({ message: `This coupon is only valid for ${coupon.applicableFor}` });
     }
 
     if (coupon.expiryDate < new Date()) {
@@ -98,6 +103,10 @@ router.post('/create-order', protect, async (req, res) => {
     if (couponCode) {
       const coupon = await Coupon.findOne({ code: couponCode.toUpperCase(), isActive: true });
       if (coupon && coupon.expiryDate > new Date() && !coupon.usedBy.includes(req.user._id)) {
+        if (coupon.applicableFor && coupon.applicableFor !== 'All' && coupon.applicableFor !== 'Events') {
+           return res.status(400).json({ message: 'This coupon is not valid for events' });
+        }
+        
         const baseAmount = amount;
         if (coupon.discountType === 'fixed') {
           amount = amount - coupon.discountValue;
@@ -280,6 +289,10 @@ router.post('/create-doc-verify-order', protect, async (req, res) => {
     if (couponCode) {
       const coupon = await Coupon.findOne({ code: couponCode.toUpperCase(), isActive: true });
       if (coupon && coupon.expiryDate > new Date() && !coupon.usedBy.includes(req.user._id)) {
+        if (coupon.applicableFor && coupon.applicableFor !== 'All' && coupon.applicableFor !== 'Documents') {
+          return res.status(400).json({ message: 'This coupon is not valid for documents' });
+        }
+
         if (coupon.discountType === 'fixed') {
           amount = amount - coupon.discountValue;
         } else if (coupon.discountType === 'percentage') {
