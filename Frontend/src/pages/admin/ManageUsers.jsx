@@ -819,6 +819,54 @@ const ManageUsers = () => {
     return matchesStatus && matchesRole && matchesSearch;
   });
 
+  const exportToCSV = () => {
+    if (filteredUsers.length === 0) {
+      alert("No users to export.");
+      return;
+    }
+
+    const headers = [
+      "ID",
+      "Username",
+      "Role",
+      "First Name",
+      "Last Name",
+      "Email",
+      "Phone",
+      "Verification Status",
+      "Payment Status",
+      "Date Joined"
+    ];
+
+    const csvRows = [headers.join(",")];
+
+    filteredUsers.forEach(user => {
+      const row = [
+        user._id,
+        `"${user.username || ""}"`,
+        user.role,
+        `"${user.personalInfo?.firstName || ""}"`,
+        `"${user.personalInfo?.lastName || ""}"`,
+        `"${user.email || user.contactInfo?.email || ""}"`,
+        `"${user.contactInfo?.phone || user.personalInfo?.phone || ""}"`,
+        user.verificationStatus,
+        user.isFeeReceived ? 'Paid' : 'Unpaid',
+        new Date(user.createdAt).toLocaleDateString()
+      ];
+      csvRows.push(row.join(","));
+    });
+
+    const csvContent = csvRows.join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "Users_Export.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
@@ -905,9 +953,19 @@ const ManageUsers = () => {
 
       {/* Users Table Section */}
       <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex items-center gap-3">
-          <span className="w-1.5 h-6 bg-blue-600 rounded-full"></span>
-          <h2 className="text-lg font-black text-gray-900 tracking-tight">System Users</h2>
+        <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="w-1.5 h-6 bg-blue-600 rounded-full"></span>
+            <h2 className="text-lg font-black text-gray-900 tracking-tight">System Users</h2>
+          </div>
+          <button
+            onClick={exportToCSV}
+            className="px-4 py-2 bg-emerald-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-sm"
+            title="Export Users to CSV"
+          >
+            <RiDownload2Line size={16} />
+            Export CSV
+          </button>
         </div>
         
         <div className="overflow-x-auto">

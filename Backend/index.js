@@ -27,7 +27,7 @@ app.use(express.json({ limit: '25mb' }));
 app.use(express.urlencoded({ limit: '25mb', extended: true }));
 app.use(cors({
   origin: [
-    'http://localhost:5173', 
+    'http://localhost:5173',
     'http://127.0.0.1:5173',
     'http://localhost:5174', // Common alternative
     process.env.FRONTEND_URL,
@@ -45,6 +45,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/user-events', require('./routes/events'));
 app.use('/api/upload', require('./routes/upload'));
 app.use('/api/payment', require('./routes/payment'));
+app.use('/api/document-verification', require('./routes/documentVerification'));
 
 app.get('/', (req, res) => {
   res.send('API is running...');

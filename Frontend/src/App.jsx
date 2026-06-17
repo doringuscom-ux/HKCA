@@ -21,6 +21,7 @@ import NotFound from './pages/NotFound'
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
 import TermsConditionsPage from './pages/TermsConditionsPage'
 import RefundPolicyPage from './pages/RefundPolicyPage'
+import DocumentVerifyPage from './pages/DocumentVerifyPage'
 import { AnimatePresence } from 'framer-motion'
 import { PageTransition } from './components/common/Animations'
 import { useLocation } from 'react-router-dom'
@@ -40,6 +41,7 @@ import ManageNews from './pages/admin/ManageNews'
 import ManageInquiries from './pages/admin/ManageInquiries'
 import ManageChatbot from './pages/admin/ManageChatbot'
 import RegistrationManager from './pages/admin/RegistrationManager'
+import ManageVerifications from './pages/admin/ManageVerifications'
 
 function App() {
   const location = useLocation()
@@ -77,6 +79,7 @@ function App() {
                       <Route path="/privacy-policy" element={<PageTransition><PrivacyPolicyPage /></PageTransition>} />
                       <Route path="/terms-conditions" element={<PageTransition><TermsConditionsPage /></PageTransition>} />
                       <Route path="/refund-policy" element={<PageTransition><RefundPolicyPage /></PageTransition>} />
+                      <Route path="/document-verify" element={<PageTransition><DocumentVerifyPage /></PageTransition>} />
                       <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
                     </Routes>
                   </AnimatePresence>
@@ -101,6 +104,7 @@ function App() {
             <Route path="inquiries" element={<ManageInquiries />} />
             <Route path="chatbot" element={<ManageChatbot />} />
             <Route path="registration" element={<RegistrationManager />} />
+            <Route path="verifications" element={<ManageVerifications />} />
           </Route>
         </Routes>
       </AnimatePresence>

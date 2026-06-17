@@ -35,6 +35,7 @@ const Navbar = () => {
     { name: 'Events', href: '/events' },
     { name: 'Results', href: '/results' },
     { name: 'Gallery', href: '/gallery' },
+    { name: 'Verify Doc', href: '/document-verify' },
     { name: 'Contact', href: '/contact' },
   ]
 

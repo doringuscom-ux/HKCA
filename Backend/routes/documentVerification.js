@@ -1,0 +1,56 @@
+const express = require('express');
+const router = express.Router();
+const { protect } = require('../middleware/auth');
+const DocumentVerification = require('../models/DocumentVerification');
+const GlobalSettings = require('../models/GlobalSettings');
+
+// @desc    Get document categories
+// @route   GET /api/document-verification/categories
+// @access  Public
+router.get('/categories', async (req, res) => {
+  try {
+    const settings = await GlobalSettings.findOne();
+    if (!settings) {
+      return res.json([]);
+    }
+    res.json(settings.documentCategories || []);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Submit a document verification request
+// @route   POST /api/document-verification/submit
+// @access  Private
+router.post('/submit', protect, async (req, res) => {
+  const { documentCategory, documentUrl, feePaid } = req.body;
+
+  if (!documentCategory || !documentUrl) {
+    return res.status(400).json({ message: 'Please provide all required fields' });
+  }
+
+  try {
+    // Optionally verify the fee from GlobalSettings
+    const settings = await GlobalSettings.findOne();
+    const category = settings?.documentCategories?.find(c => c.name === documentCategory);
+
+    // In a real scenario with payment integration, you'd handle the payment gateway here
+    // and verify the actual amount paid matches the category fee.
+    // Assuming payment is handled or it's a request to be paid later/offline for now.
+
+    const newRequest = await DocumentVerification.create({
+      user: req.user._id,
+      documentCategory,
+      documentUrl,
+      feePaid: feePaid || (category ? category.fee : 0),
+      status: 'Pending',
+      paymentStatus: 'Pending' // Can be updated by admin or webhook later
+    });
+
+    res.status(201).json(newRequest);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+module.exports = router;
