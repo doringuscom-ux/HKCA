@@ -264,7 +264,7 @@ router.post('/create-registration-order', async (req, res) => {
 // @route   POST /api/payment/create-doc-verify-order
 // @access  Private
 router.post('/create-doc-verify-order', protect, async (req, res) => {
-  const { categoryName } = req.body;
+  const { categoryName, couponCode } = req.body;
 
   try {
     let settings = await GlobalSettings.findOne();
@@ -274,8 +274,33 @@ router.post('/create-doc-verify-order', protect, async (req, res) => {
       return res.status(400).json({ message: 'No fee required for this category or category not found.' });
     }
 
+    let amount = category.fee;
+    let discountAmount = 0;
+
+    if (couponCode) {
+      const coupon = await Coupon.findOne({ code: couponCode.toUpperCase(), isActive: true });
+      if (coupon && coupon.expiryDate > new Date() && !coupon.usedBy.includes(req.user._id)) {
+        if (coupon.discountType === 'fixed') {
+          amount = amount - coupon.discountValue;
+        } else if (coupon.discountType === 'percentage') {
+          amount = amount - (amount * (coupon.discountValue / 100));
+        }
+        
+        amount = Math.max(0, amount);
+        discountAmount = category.fee - amount;
+      }
+    }
+
+    if (amount <= 0) {
+      return res.json({
+        orderId: null,
+        amount: 0,
+        message: 'No payment required'
+      });
+    }
+
     const options = {
-      amount: Math.round(category.fee * 100), // paise
+      amount: Math.round(amount * 100), // paise
       currency: 'INR',
       receipt: `doc_receipt_${Date.now()}`,
     };

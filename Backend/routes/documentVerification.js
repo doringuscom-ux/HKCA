@@ -3,6 +3,7 @@ const router = express.Router();
 const { protect } = require('../middleware/auth');
 const DocumentVerification = require('../models/DocumentVerification');
 const GlobalSettings = require('../models/GlobalSettings');
+const Coupon = require('../models/Coupon');
 
 // @desc    Get document categories
 // @route   GET /api/document-verification/categories
@@ -23,7 +24,7 @@ router.get('/categories', async (req, res) => {
 // @route   POST /api/document-verification/submit
 // @access  Private
 router.post('/submit', protect, async (req, res) => {
-  const { documentCategory, documentUrl, feePaid, transactionId, paymentStatus } = req.body;
+  const { documentCategory, documentUrl, feePaid, transactionId, paymentStatus, couponCode } = req.body;
 
   if (!documentCategory || !documentUrl) {
     return res.status(400).json({ message: 'Please provide all required fields' });
@@ -38,11 +39,19 @@ router.post('/submit', protect, async (req, res) => {
       user: req.user._id,
       documentCategory,
       documentUrl,
-      feePaid: feePaid || (category ? category.fee : 0),
+      feePaid: feePaid || 0,
       status: 'Pending',
       paymentStatus: paymentStatus || (feePaid > 0 ? 'Pending' : 'Completed'),
       transactionId: transactionId || null
     });
+
+    if (couponCode && paymentStatus === 'Completed') {
+       const coupon = await Coupon.findOne({ code: couponCode.toUpperCase() });
+       if (coupon) {
+         coupon.usedBy.push(req.user._id);
+         await coupon.save();
+       }
+    }
 
     res.status(201).json(newRequest);
   } catch (error) {
