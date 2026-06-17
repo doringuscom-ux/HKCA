@@ -60,8 +60,8 @@ const DocumentVerifyPage = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (e, paymentDetails = null) => {
+    if (e) e.preventDefault();
     if (!user) {
       alert("Please login first to submit a document for verification.");
       navigate('/login');
@@ -78,12 +78,57 @@ const DocumentVerifyPage = () => {
       return;
     }
 
+    // Initiate payment if fee is required and payment hasn't been made
+    if (fee > 0 && !paymentDetails) {
+      setIsSubmitting(true);
+      try {
+        const { data } = await api.post('/payment/create-doc-verify-order', {
+          categoryName: selectedCategory
+        });
+
+        const options = {
+          key: data.keyId,
+          amount: data.amount,
+          currency: "INR",
+          name: "HKCA Portal",
+          description: `Document Verification Fee for ${selectedCategory}`,
+          order_id: data.orderId,
+          handler: function (response) {
+            // Payment successful, proceed to submit
+            handleSubmit(null, response);
+          },
+          prefill: {
+            name: user?.username || 'User',
+            email: user?.email || '',
+          },
+          theme: {
+            color: "#2563eb",
+          },
+          modal: {
+            ondismiss: function() {
+              setIsSubmitting(false);
+            }
+          }
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+      } catch (err) {
+        console.error('Payment Error:', err);
+        alert(err.response?.data?.message || 'Error initializing payment.');
+        setIsSubmitting(false);
+      }
+      return; // Stop execution until payment is complete
+    }
+
     setIsSubmitting(true);
     try {
       await api.post('/document-verification/submit', {
         documentCategory: selectedCategory,
         documentUrl: documentUrl,
-        feePaid: fee
+        feePaid: fee,
+        transactionId: paymentDetails?.razorpay_payment_id || null,
+        paymentStatus: paymentDetails ? 'Completed' : (fee > 0 ? 'Pending' : 'Completed')
       });
       setSuccess(true);
     } catch (error) {

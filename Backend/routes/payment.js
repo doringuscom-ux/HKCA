@@ -260,4 +260,37 @@ router.post('/create-registration-order', async (req, res) => {
   }
 });
 
+// @desc    Create Razorpay order for Document Verification
+// @route   POST /api/payment/create-doc-verify-order
+// @access  Private
+router.post('/create-doc-verify-order', protect, async (req, res) => {
+  const { categoryName } = req.body;
+
+  try {
+    let settings = await GlobalSettings.findOne();
+    const category = settings?.documentCategories?.find(c => c.name === categoryName);
+    
+    if (!category || category.fee <= 0) {
+      return res.status(400).json({ message: 'No fee required for this category or category not found.' });
+    }
+
+    const options = {
+      amount: Math.round(category.fee * 100), // paise
+      currency: 'INR',
+      receipt: `doc_receipt_${Date.now()}`,
+    };
+
+    const order = await razorpay.orders.create(options);
+
+    res.json({
+      orderId: order.id,
+      amount: order.amount,
+      keyId: process.env.RAZORPAY_KEY_ID
+    });
+  } catch (error) {
+    console.error('Doc Verify Order Error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router;

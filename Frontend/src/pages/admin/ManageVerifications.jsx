@@ -7,7 +7,8 @@ import {
   RiEyeLine, 
   RiAddLine,
   RiDeleteBinLine,
-  RiLoader4Line
+  RiLoader4Line,
+  RiEditLine
 } from 'react-icons/ri';
 
 const ManageVerifications = () => {
@@ -22,6 +23,7 @@ const ManageVerifications = () => {
   const [newCatName, setNewCatName] = useState('');
   const [newCatFee, setNewCatFee] = useState(0);
   const [isSavingCat, setIsSavingCat] = useState(false);
+  const [editIndex, setEditIndex] = useState(null);
 
   useEffect(() => {
     fetchVerifications();
@@ -65,19 +67,38 @@ const ManageVerifications = () => {
     
     setIsSavingCat(true);
     try {
-      const updatedCategories = [...categories, { name: newCatName, fee: Number(newCatFee) }];
+      let updatedCategories = [...categories];
+      if (editIndex !== null) {
+        updatedCategories[editIndex] = { name: newCatName, fee: Number(newCatFee) };
+      } else {
+        updatedCategories.push({ name: newCatName, fee: Number(newCatFee) });
+      }
+      
       const { data } = await api.put('/admin/settings/document-categories', {
         documentCategories: updatedCategories
       });
       setCategories(data);
       setNewCatName('');
       setNewCatFee(0);
+      setEditIndex(null);
     } catch (error) {
-      console.error('Error adding category:', error);
-      alert('Failed to add category');
+      console.error('Error saving category:', error);
+      alert('Failed to save category');
     } finally {
       setIsSavingCat(false);
     }
+  };
+
+  const handleEditClick = (idx, cat) => {
+    setEditIndex(idx);
+    setNewCatName(cat.name);
+    setNewCatFee(cat.fee);
+  };
+
+  const handleCancelEdit = () => {
+    setEditIndex(null);
+    setNewCatName('');
+    setNewCatFee(0);
   };
 
   const handleDeleteCategory = async (indexToDelete) => {
@@ -226,7 +247,9 @@ const ManageVerifications = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-6">
-              <h3 className="text-lg font-bold text-gray-800 mb-4 border-b border-gray-100 pb-2">Add New Category</h3>
+              <h3 className="text-lg font-bold text-gray-800 mb-4 border-b border-gray-100 pb-2">
+                {editIndex !== null ? 'Edit Category' : 'Add New Category'}
+              </h3>
               <form onSubmit={handleAddCategory} className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Category Name</label>
@@ -251,14 +274,25 @@ const ManageVerifications = () => {
                     required
                   />
                 </div>
-                <button
-                  type="submit"
-                  disabled={isSavingCat || !newCatName}
-                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2"
-                >
-                  {isSavingCat ? <RiLoader4Line className="animate-spin" /> : <RiAddLine />}
-                  Add Category
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    disabled={isSavingCat || !newCatName}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2"
+                  >
+                    {isSavingCat ? <RiLoader4Line className="animate-spin" /> : (editIndex !== null ? <RiCheckLine /> : <RiAddLine />)}
+                    {editIndex !== null ? 'Update' : 'Add'}
+                  </button>
+                  {editIndex !== null && (
+                    <button
+                      type="button"
+                      onClick={handleCancelEdit}
+                      className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2"
+                    >
+                      <RiCloseLine /> Cancel
+                    </button>
+                  )}
+                </div>
               </form>
             </div>
           </div>
@@ -284,6 +318,13 @@ const ManageVerifications = () => {
                         <td className="p-4 font-bold text-gray-800">{cat.name}</td>
                         <td className="p-4 font-medium text-gray-600">₹{cat.fee}</td>
                         <td className="p-4 text-right">
+                          <button
+                            onClick={() => handleEditClick(idx, cat)}
+                            className="p-2 text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors mr-2"
+                            title="Edit Category"
+                          >
+                            <RiEditLine size={20} />
+                          </button>
                           <button
                             onClick={() => handleDeleteCategory(idx)}
                             className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"

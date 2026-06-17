@@ -23,7 +23,7 @@ router.get('/categories', async (req, res) => {
 // @route   POST /api/document-verification/submit
 // @access  Private
 router.post('/submit', protect, async (req, res) => {
-  const { documentCategory, documentUrl, feePaid } = req.body;
+  const { documentCategory, documentUrl, feePaid, transactionId, paymentStatus } = req.body;
 
   if (!documentCategory || !documentUrl) {
     return res.status(400).json({ message: 'Please provide all required fields' });
@@ -34,17 +34,14 @@ router.post('/submit', protect, async (req, res) => {
     const settings = await GlobalSettings.findOne();
     const category = settings?.documentCategories?.find(c => c.name === documentCategory);
 
-    // In a real scenario with payment integration, you'd handle the payment gateway here
-    // and verify the actual amount paid matches the category fee.
-    // Assuming payment is handled or it's a request to be paid later/offline for now.
-
     const newRequest = await DocumentVerification.create({
       user: req.user._id,
       documentCategory,
       documentUrl,
       feePaid: feePaid || (category ? category.fee : 0),
       status: 'Pending',
-      paymentStatus: 'Pending' // Can be updated by admin or webhook later
+      paymentStatus: paymentStatus || (feePaid > 0 ? 'Pending' : 'Completed'),
+      transactionId: transactionId || null
     });
 
     res.status(201).json(newRequest);
