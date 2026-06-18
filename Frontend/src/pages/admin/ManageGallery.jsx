@@ -6,6 +6,7 @@ const ManageGallery = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [btnLoading, setBtnLoading] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState('');
   
   // Form State
@@ -120,6 +121,19 @@ const ManageGallery = () => {
       } catch (err) {
         alert('Failed to delete item');
       }
+    }
+  };
+
+  const handleSyncYouTube = async () => {
+    setIsSyncing(true);
+    try {
+      const response = await api.post('/admin/gallery/sync-youtube');
+      alert(response.data.message || 'YouTube sync successful!');
+      fetchItems();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to sync with YouTube');
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -311,10 +325,20 @@ const ManageGallery = () => {
 
       {/* List Section */}
       <div className="space-y-6">
-        <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3">
-          <span className="w-1.5 h-6 bg-blue-600 rounded-full"></span>
-          Existing Items
-        </h2>
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3">
+            <span className="w-1.5 h-6 bg-blue-600 rounded-full"></span>
+            Existing Items
+          </h2>
+          <button
+            onClick={handleSyncYouTube}
+            disabled={isSyncing}
+            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 transition-all disabled:opacity-70 disabled:cursor-not-allowed shadow-sm"
+          >
+            {isSyncing ? <RiLoader4Line className="animate-spin" /> : <RiLinksLine />}
+            {isSyncing ? 'Syncing...' : 'Sync YouTube Videos'}
+          </button>
+        </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {items.map((item) => (
