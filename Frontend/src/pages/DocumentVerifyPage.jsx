@@ -9,11 +9,11 @@ import { motion } from 'framer-motion';
 const DocumentVerifyPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [fee, setFee] = useState(0);
-  
+
   const [documentFile, setDocumentFile] = useState(null);
   const [documentUrl, setDocumentUrl] = useState('');
   const [isUploading, setIsUploading] = useState(false);
@@ -106,12 +106,12 @@ const DocumentVerifyPage = () => {
       navigate('/login');
       return;
     }
-    
+
     if (!selectedCategory) {
       alert("Please select a document category.");
       return;
     }
-    
+
     if (!documentUrl) {
       alert("Please upload a document.");
       return;
@@ -148,7 +148,7 @@ const DocumentVerifyPage = () => {
             color: "#2563eb",
           },
           modal: {
-            ondismiss: function() {
+            ondismiss: function () {
               setIsSubmitting(false);
             }
           }
@@ -187,7 +187,7 @@ const DocumentVerifyPage = () => {
   if (success) {
     return (
       <div className="min-h-screen bg-[#0d1117] pt-32 pb-12 font-sans flex flex-col items-center justify-center">
-        <motion.div 
+        <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           className="bg-[#161b22] p-12 rounded-3xl border border-slate-800 flex flex-col items-center max-w-md w-full text-center"
@@ -224,7 +224,7 @@ const DocumentVerifyPage = () => {
 
         <div className="bg-[#161b22] rounded-[2.5rem] p-8 md:p-12 shadow-2xl border border-slate-800/50">
           <form onSubmit={handleSubmit} className="space-y-8">
-            
+
             <div className="space-y-3">
               <label className="text-sm font-black uppercase tracking-wider text-slate-400">Document Category</label>
               <select
@@ -252,8 +252,8 @@ const DocumentVerifyPage = () => {
                   <div className="flex flex-col items-center gap-3">
                     <RiCheckLine className="text-emerald-500" size={32} />
                     <span className="text-emerald-500 font-bold text-sm">{documentFile?.name || 'File Uploaded Successfully'}</span>
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={() => { setDocumentUrl(''); setDocumentFile(null); }}
                       className="mt-2 text-xs text-red-400 hover:text-red-300 underline"
                     >
@@ -264,12 +264,12 @@ const DocumentVerifyPage = () => {
                   <div className="flex flex-col items-center gap-3">
                     <RiFileUploadLine className="text-slate-500" size={40} />
                     <span className="text-slate-400 font-medium">Click to browse or drag and drop</span>
-                    <span className="text-slate-600 text-xs uppercase tracking-widest">JPG, PNG, PDF</span>
+                    <span className="text-slate-600 text-xs uppercase tracking-widest">JPG, PNG</span>
                   </div>
                 )}
                 {!documentUrl && !isUploading && (
-                  <input 
-                    type="file" 
+                  <input
+                    type="file"
                     onChange={handleFileUpload}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     accept="image/*,.pdf"

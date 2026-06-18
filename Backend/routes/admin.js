@@ -11,6 +11,7 @@ const Coupon = require('../models/Coupon');
 const Publication = require('../models/Publication');
 const Asset = require('../models/Asset');
 const ContactInquiry = require('../models/ContactInquiry');
+const { sendResolutionEmail } = require('../utils/emailService');
 const GlobalSettings = require('../models/GlobalSettings');
 const RegistrationCode = require('../models/RegistrationCode');
 const DocumentVerification = require('../models/DocumentVerification');
@@ -1108,6 +1109,13 @@ router.patch('/inquiries/:id/status', protect, async (req, res) => {
     );
 
     if (!inquiry) return res.status(404).json({ message: 'Inquiry not found' });
+    
+    // Send email when status is updated to 'archived' (resolved)
+    if (status === 'archived' && inquiry.email) {
+      // Fire and forget, or await it
+      sendResolutionEmail(inquiry.email, inquiry.name);
+    }
+    
     res.json(inquiry);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -1145,6 +1153,13 @@ router.put('/document-verifications/:id/status', protect, adminGuard, async (req
     if (!verification) {
       return res.status(404).json({ message: 'Verification not found' });
     }
+
+    // Send email when admin clicks the tick button (Verified)
+    if (status === 'Verified' && verification.user && verification.user.email) {
+      const userName = verification.user.personalInfo?.fullName || verification.user.username || 'User';
+      sendResolutionEmail(verification.user.email, userName);
+    }
+
     res.json(verification);
   } catch (error) {
     res.status(500).json({ message: error.message });
