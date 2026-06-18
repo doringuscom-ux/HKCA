@@ -14,7 +14,8 @@ import {
   RiFolderVideoLine,
   RiMailSendLine,
   RiRobot2Line,
-  RiMoneyDollarCircleLine
+  RiMoneyDollarCircleLine,
+  RiShieldCheckLine
 } from 'react-icons/ri';
 
 const AdminSidebar = () => {
@@ -28,6 +29,7 @@ const AdminSidebar = () => {
 
   const navItems = [
     { name: 'Dashboard', path: '/admin', icon: <RiDashboardLine /> },
+    { name: 'Manage Verifications', path: '/admin/verifications', icon: <RiShieldCheckLine /> },
     { name: 'Manage Gallery', path: '/admin/gallery', icon: <RiImageLine /> },
     { name: 'Media Library', path: '/admin/assets', icon: <RiFolderVideoLine /> },
     { name: 'Manage Events', path: '/admin/events', icon: <RiCalendarEventLine /> },

@@ -36,11 +36,16 @@ router.get('/get-price/:eventId', protect, async (req, res) => {
 // @route   GET /api/payment/validate-coupon/:code
 // @access  Private
 router.get('/validate-coupon/:code', protect, async (req, res) => {
+  const { context } = req.query;
   try {
     const coupon = await Coupon.findOne({ code: req.params.code.toUpperCase(), isActive: true });
 
     if (!coupon) {
       return res.status(404).json({ message: 'Invalid or inactive coupon code' });
+    }
+
+    if (coupon.applicableFor && coupon.applicableFor !== 'All' && context && coupon.applicableFor !== context) {
+      return res.status(400).json({ message: `This coupon is only valid for ${coupon.applicableFor}` });
     }
 
     if (coupon.expiryDate < new Date()) {
@@ -98,6 +103,10 @@ router.post('/create-order', protect, async (req, res) => {
     if (couponCode) {
       const coupon = await Coupon.findOne({ code: couponCode.toUpperCase(), isActive: true });
       if (coupon && coupon.expiryDate > new Date() && !coupon.usedBy.includes(req.user._id)) {
+        if (coupon.applicableFor && coupon.applicableFor !== 'All' && coupon.applicableFor !== 'Events') {
+           return res.status(400).json({ message: 'This coupon is not valid for events' });
+        }
+        
         const baseAmount = amount;
         if (coupon.discountType === 'fixed') {
           amount = amount - coupon.discountValue;
@@ -256,6 +265,68 @@ router.post('/create-registration-order', async (req, res) => {
     });
   } catch (error) {
     console.error('Registration Order Error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Create Razorpay order for Document Verification
+// @route   POST /api/payment/create-doc-verify-order
+// @access  Private
+router.post('/create-doc-verify-order', protect, async (req, res) => {
+  const { categoryName, couponCode } = req.body;
+
+  try {
+    let settings = await GlobalSettings.findOne();
+    const category = settings?.documentCategories?.find(c => c.name === categoryName);
+    
+    if (!category || category.fee <= 0) {
+      return res.status(400).json({ message: 'No fee required for this category or category not found.' });
+    }
+
+    let amount = category.fee;
+    let discountAmount = 0;
+
+    if (couponCode) {
+      const coupon = await Coupon.findOne({ code: couponCode.toUpperCase(), isActive: true });
+      if (coupon && coupon.expiryDate > new Date() && !coupon.usedBy.includes(req.user._id)) {
+        if (coupon.applicableFor && coupon.applicableFor !== 'All' && coupon.applicableFor !== 'Documents') {
+          return res.status(400).json({ message: 'This coupon is not valid for documents' });
+        }
+
+        if (coupon.discountType === 'fixed') {
+          amount = amount - coupon.discountValue;
+        } else if (coupon.discountType === 'percentage') {
+          amount = amount - (amount * (coupon.discountValue / 100));
+        }
+        
+        amount = Math.max(0, amount);
+        discountAmount = category.fee - amount;
+      }
+    }
+
+    if (amount <= 0) {
+      return res.json({
+        orderId: null,
+        amount: 0,
+        message: 'No payment required'
+      });
+    }
+
+    const options = {
+      amount: Math.round(amount * 100), // paise
+      currency: 'INR',
+      receipt: `doc_receipt_${Date.now()}`,
+    };
+
+    const order = await razorpay.orders.create(options);
+
+    res.json({
+      orderId: order.id,
+      amount: order.amount,
+      keyId: process.env.RAZORPAY_KEY_ID
+    });
+  } catch (error) {
+    console.error('Doc Verify Order Error:', error);
     res.status(500).json({ message: error.message });
   }
 });

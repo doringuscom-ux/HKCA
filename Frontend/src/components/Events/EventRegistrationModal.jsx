@@ -78,7 +78,7 @@ const EventRegistrationModal = ({ event, onClose, onDashboardUpdate, initialRole
     setValidatingCoupon(true);
     setError('');
     try {
-      const response = await api.get(`/payment/validate-coupon/${couponCode}`);
+      const response = await api.get(`/payment/validate-coupon/${couponCode}?context=Events`);
       setAppliedCoupon(response.data);
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid coupon code');

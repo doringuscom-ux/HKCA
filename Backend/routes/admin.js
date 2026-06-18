@@ -11,8 +11,10 @@ const Coupon = require('../models/Coupon');
 const Publication = require('../models/Publication');
 const Asset = require('../models/Asset');
 const ContactInquiry = require('../models/ContactInquiry');
+const { sendResolutionEmail } = require('../utils/emailService');
 const GlobalSettings = require('../models/GlobalSettings');
 const RegistrationCode = require('../models/RegistrationCode');
+const DocumentVerification = require('../models/DocumentVerification');
 
 // Multer storage configuration
 const storage = multer.memoryStorage();
@@ -829,6 +831,39 @@ router.put('/settings/registration-fees', protect, adminGuard, async (req, res) 
   }
 });
 
+// @desc    Get document categories
+// @route   GET /api/admin/settings/document-categories
+// @access  Public
+router.get('/settings/document-categories', async (req, res) => {
+  try {
+    let settings = await GlobalSettings.findOne();
+    if (!settings) {
+      settings = await GlobalSettings.create({});
+    }
+    res.json(settings.documentCategories || []);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Update document categories
+// @route   PUT /api/admin/settings/document-categories
+// @access  Private (Admin only)
+router.put('/settings/document-categories', protect, adminGuard, async (req, res) => {
+  const { documentCategories } = req.body;
+  try {
+    let settings = await GlobalSettings.findOne();
+    if (!settings) {
+      settings = new GlobalSettings();
+    }
+    settings.documentCategories = documentCategories;
+    await settings.save();
+    res.json(settings.documentCategories);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // --- Registration Code Management ---
 
 // @desc    Generate a registration code
@@ -895,7 +930,7 @@ router.get('/coupons', protect, adminGuard, async (req, res) => {
 // @route   POST /api/admin/coupons
 // @access  Private (Admin only)
 router.post('/coupons', protect, adminGuard, async (req, res) => {
-  const { code, discountType, discountValue, minPurchase, expiryDate, usageLimit } = req.body;
+  const { code, discountType, discountValue, minPurchase, expiryDate, usageLimit, applicableFor } = req.body;
   try {
     const couponExists = await Coupon.findOne({ code: code.toUpperCase() });
     if (couponExists) {
@@ -909,6 +944,7 @@ router.post('/coupons', protect, adminGuard, async (req, res) => {
       minPurchase,
       expiryDate,
       usageLimit,
+      applicableFor: applicableFor || 'All',
       restrictedEmail: req.body.restrictedEmail
     });
 
@@ -1073,7 +1109,58 @@ router.patch('/inquiries/:id/status', protect, async (req, res) => {
     );
 
     if (!inquiry) return res.status(404).json({ message: 'Inquiry not found' });
+    
+    // Send email when status is updated to 'archived' (resolved)
+    if (status === 'archived' && inquiry.email) {
+      // Fire and forget, or await it
+      sendResolutionEmail(inquiry.email, inquiry.name);
+    }
+    
     res.json(inquiry);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// --- Document Verification Routes ---
+
+// @desc    Get all document verifications
+// @route   GET /api/admin/document-verifications
+// @access  Private (Admin only)
+router.get('/document-verifications', protect, adminGuard, async (req, res) => {
+  try {
+    const verifications = await DocumentVerification.find()
+      .populate('user', 'username email personalInfo')
+      .sort({ createdAt: -1 });
+    res.json(verifications);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Update document verification status
+// @route   PUT /api/admin/document-verifications/:id/status
+// @access  Private (Admin only)
+router.put('/document-verifications/:id/status', protect, adminGuard, async (req, res) => {
+  try {
+    const { status } = req.body;
+    const verification = await DocumentVerification.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    ).populate('user', 'username email personalInfo');
+    
+    if (!verification) {
+      return res.status(404).json({ message: 'Verification not found' });
+    }
+
+    // Send email when admin clicks the tick button (Verified)
+    if (status === 'Verified' && verification.user && verification.user.email) {
+      const userName = verification.user.personalInfo?.fullName || verification.user.username || 'User';
+      sendResolutionEmail(verification.user.email, userName);
+    }
+
+    res.json(verification);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

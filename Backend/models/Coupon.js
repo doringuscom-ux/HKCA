@@ -41,6 +41,11 @@ const couponSchema = new mongoose.Schema({
     type: String,
     lowercase: true,
     trim: true
+  },
+  applicableFor: {
+    type: String,
+    enum: ['All', 'Events', 'Documents'],
+    default: 'All'
   }
 }, { timestamps: true });
 
