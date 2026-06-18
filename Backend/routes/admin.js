@@ -64,7 +64,7 @@ router.get('/gallery', async (req, res) => {
         const list = await yts({ search: 'HKCA Haryana Canoeing', pages: 1 });
         const channelVideos = list.videos.filter(v => v.author && v.author.name && v.author.name.includes('HKCA'));
         const videosToSync = channelVideos.length > 0 ? channelVideos : list.videos.slice(0, 10);
-        
+
         youtubeCache.data = videosToSync.map(v => ({
           _id: 'yt_' + v.videoId, // Create a fake object ID so React doesn't complain about keys
           title: v.title,
@@ -89,7 +89,7 @@ router.get('/gallery', async (req, res) => {
     });
 
     const allItems = [...dbItems, ...uniqueYoutubeVideos];
-    
+
     // Sort combined items by createdAt
     allItems.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
@@ -1161,13 +1161,13 @@ router.patch('/inquiries/:id/status', protect, async (req, res) => {
     );
 
     if (!inquiry) return res.status(404).json({ message: 'Inquiry not found' });
-    
+
     // Send email when status is updated to 'archived' (resolved)
     if (status === 'archived' && inquiry.email) {
       // Fire and forget, or await it
       sendResolutionEmail(inquiry.email, inquiry.name);
     }
-    
+
     res.json(inquiry);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -1201,7 +1201,7 @@ router.put('/document-verifications/:id/status', protect, adminGuard, async (req
       { status },
       { new: true }
     ).populate('user', 'username email personalInfo');
-    
+
     if (!verification) {
       return res.status(404).json({ message: 'Verification not found' });
     }
