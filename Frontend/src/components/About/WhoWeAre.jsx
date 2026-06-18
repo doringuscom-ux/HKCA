@@ -19,12 +19,13 @@ const WhoWeAre = () => {
                 Introducing HKCA
               </span>
               
-              <h2 className="text-white font-heading text-4xl sm:text-5xl lg:text-[4rem] font-black leading-[1] tracking-tighter uppercase">
+              <h2 className="text-white font-heading text-4xl sm:text-5xl lg:text-[3.2rem] xl:text-[3.8rem] font-black leading-[1] tracking-tighter uppercase">
                 <span className="text-blue-500 font-sans tracking-[0.3em] text-xs sm:text-sm mb-3 block font-bold drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">About</span>
-                <span className="hover:text-blue-400 transition-colors duration-500">Haryana Kayak</span> <br className="hidden sm:block" />
+                <span className="hover:text-blue-400 transition-colors duration-500 whitespace-nowrap">Haryana Kayaking</span> <br className="hidden sm:block" />
                 <span className="text-gray-600 font-light italic mr-3">&</span> 
-                <span className="hover:text-blue-400 transition-colors duration-500">Canoe</span>{' '}
-                <span className="text-blue-400/80 text-3xl sm:text-4xl lg:text-[3rem] tracking-normal inline-block mt-1">Association</span>
+                <span className="hover:text-blue-400 transition-colors duration-500">Canoeing</span>{' '}
+                <br className="hidden lg:block" />
+                <span className="text-blue-400/80 text-3xl sm:text-4xl lg:text-[3rem] tracking-normal block mt-1">Association</span>
               </h2>
             </div>
 
