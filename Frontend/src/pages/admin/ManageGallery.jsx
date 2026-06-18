@@ -380,6 +380,11 @@ const ManageGallery = () => {
                       Video
                     </span>
                   )}
+                  {item.source === 'youtube' && (
+                    <span className="px-3 py-1 bg-red-600 text-white rounded-lg text-[10px] font-bold uppercase tracking-widest shadow-sm flex items-center gap-1">
+                      YouTube
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="p-5">

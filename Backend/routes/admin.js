@@ -123,6 +123,7 @@ router.post('/gallery/sync-youtube', protect, adminGuard, async (req, res) => {
           imageUrl: videoUrl,
           category: 'General',
           type: 'video',
+          source: 'youtube'
         });
         addedCount++;
       }

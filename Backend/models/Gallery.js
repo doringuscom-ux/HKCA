@@ -25,6 +25,11 @@ const gallerySchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  source: {
+    type: String,
+    enum: ['admin', 'youtube'],
+    default: 'admin',
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Gallery', gallerySchema);
