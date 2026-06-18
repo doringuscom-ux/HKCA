@@ -54,6 +54,7 @@ const DisciplinesList = () => {
 
   const getDisciplineImage = (discipline) => {
     const match = gallery.find(item => {
+      if (item.type === 'video') return false; // Don't use videos as image source
       const title = (item.title || '').toLowerCase();
       const category = (item.category || '').toLowerCase();
       return discipline.keywords.some(k => title.includes(k) || category.includes(k));
