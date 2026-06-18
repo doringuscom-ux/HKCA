@@ -4,6 +4,7 @@ const multer = require('multer');
 const cloudinary = require('../config/cloudinary');
 const { protect, adminGuard } = require('../middleware/auth');
 const Gallery = require('../models/Gallery');
+const yts = require('yt-search');
 const Event = require('../models/Event');
 const EventRegistration = require('../models/EventRegistration');
 const User = require('../models/User');
@@ -84,6 +85,53 @@ router.post('/gallery', protect, adminGuard, upload.single('image'), async (req,
     res.status(201).json(newItem);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Sync gallery items from YouTube channel
+// @route   POST /api/admin/gallery/sync-youtube
+// @access  Private
+router.post('/gallery/sync-youtube', protect, adminGuard, async (req, res) => {
+  try {
+    // Search for the channel's recent videos using yt-search
+    const list = await yts({ search: 'HKCA Haryana Canoeing', pages: 1 });
+    
+    // Filter out videos that are actually from the HKCA channel
+    // In case search returns other channels, though yt-search usually ranks exact name matches high
+    const channelVideos = list.videos.filter(v => v.author && v.author.name && v.author.name.includes('HKCA'));
+    
+    // If filtering by author name returns empty, fallback to the top 10 search results
+    const videosToSync = channelVideos.length > 0 ? channelVideos : list.videos.slice(0, 10);
+    
+    let addedCount = 0;
+    
+    for (const item of videosToSync) {
+      const videoId = item.videoId;
+      const videoUrl = item.url;
+      
+      // Check if video already exists in the gallery
+      const exists = await Gallery.findOne({ 
+        $or: [
+          { imageUrl: { $regex: videoId, $options: 'i' } },
+          { title: item.title }
+        ]
+      });
+      
+      if (!exists) {
+        await Gallery.create({
+          title: item.title,
+          imageUrl: videoUrl,
+          category: 'General',
+          type: 'video',
+        });
+        addedCount++;
+      }
+    }
+    
+    res.json({ message: `Successfully synced ${addedCount} new videos from YouTube.` });
+  } catch (error) {
+    console.error('YouTube sync error:', error);
+    res.status(500).json({ message: 'Failed to sync with YouTube.' });
   }
 });
 

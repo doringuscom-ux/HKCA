@@ -25,16 +25,17 @@ const sendViaProxy = async (to, subject, htmlContent) => {
 
 const sendResolutionEmail = async (to, userName) => {
     const subject = 'Your Query has been Resolved - HKCA';
-    
+
     // As per your required template
     const htmlContent = `
         <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px; max-width: 600px; margin: auto; line-height: 1.6;">
             <p>Dear ${userName},</p>
-            <p>Thank you for visiting the Association's website and submitting your query.</p>
-            <p>We are pleased to inform you that your concern has been reviewed and the issue has been resolved. We appreciate your patience and cooperation.</p>
+            <p>Thank you for visiting the Association’s website and submitting your query.</p>
+            <p>We are pleased to inform you that the documents requested by you have been prepared and provided accordingly. Your request has been duly attended to and the matter now stands resolved.</p>
+            <p>We appreciate your patience and cooperation.</p>
             <br/>
-            <p>With best wishes.</p>
-            <p><strong>Haryana Kurash Coaching Association (HKCA)</strong></p>
+            <p>Best wishes</p>
+            <p><strong>Haryana Kayaking and Canoeing Association</strong></p>
         </div>
     `;
 

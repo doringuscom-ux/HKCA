@@ -9,7 +9,7 @@ const AboutPage = () => {
       <PageHero 
         subtitle="About Us"
         title="DISCOVER HKCA"
-        description="Haryana Kayak & Canoe Association is dedicated to promoting water sports excellence, fostering community engagement, and developing athletes across the region through certified training and competitive opportunities."
+        description="Haryana Kayaking and Canoeing Association is dedicated to promoting water sports excellence, fostering community engagement, and developing athletes across the region through certified training and competitive opportunities."
         height="h-[250px]"
       />
       <WhoWeAre />

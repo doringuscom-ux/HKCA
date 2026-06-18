@@ -14,7 +14,7 @@ const About = () => {
           </span>
           
           <WordReveal 
-            text="ABOUT HARYANA KAYAK & CANOE ASSOCIATION"
+            text="ABOUT HARYANA KAYAKING AND CANOEING ASSOCIATION"
             className="text-white font-heading text-3xl sm:text-4xl md:text-5xl lg:text-5xl font-bold leading-[1.1] mb-6 tracking-tight max-w-xl"
           />
           

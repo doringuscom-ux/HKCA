@@ -6,6 +6,7 @@ const ManageGallery = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [btnLoading, setBtnLoading] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState('');
   
   // Form State
@@ -123,6 +124,19 @@ const ManageGallery = () => {
     }
   };
 
+  const handleSyncYouTube = async () => {
+    setIsSyncing(true);
+    try {
+      const response = await api.post('/admin/gallery/sync-youtube');
+      alert(response.data.message || 'YouTube sync successful!');
+      fetchItems();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to sync with YouTube');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -204,7 +218,7 @@ const ManageGallery = () => {
                   onClick={() => { setMediaType('video'); setIsUpload(false); }}
                   className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${mediaType === 'video' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500'}`}
                 >
-                  Video
+                  Video / Short
                 </button>
               </div>
             </div>
@@ -311,17 +325,34 @@ const ManageGallery = () => {
 
       {/* List Section */}
       <div className="space-y-6">
-        <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3">
-          <span className="w-1.5 h-6 bg-blue-600 rounded-full"></span>
-          Existing Items
-        </h2>
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3">
+            <span className="w-1.5 h-6 bg-blue-600 rounded-full"></span>
+            Existing Items
+          </h2>
+          <button
+            onClick={handleSyncYouTube}
+            disabled={isSyncing}
+            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 transition-all disabled:opacity-70 disabled:cursor-not-allowed shadow-sm"
+          >
+            {isSyncing ? <RiLoader4Line className="animate-spin" /> : <RiLinksLine />}
+            {isSyncing ? 'Syncing...' : 'Sync YouTube Videos'}
+          </button>
+        </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {items.map((item) => (
             <div key={item._id} className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden group hover:shadow-md transition-all">
               <div className="aspect-video relative overflow-hidden bg-gray-100">
                 <img
-                  src={item.imageUrl}
+                  src={
+                    item.type === 'video' 
+                      ? (item.coverImage || (() => {
+                          const ytMatch = item.imageUrl?.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/|v\/))([^?&]+)/);
+                          return ytMatch ? `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg` : 'https://via.placeholder.com/300x200?text=Video';
+                        })())
+                      : item.imageUrl
+                  }
                   alt={item.title}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
