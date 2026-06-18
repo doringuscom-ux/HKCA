@@ -11,7 +11,12 @@ const GalleryContent = () => {
   const filteredGallery = gallery.filter(item => {
     if (filter === 'all') return true;
     if (filter === 'image') return item.type !== 'video';
-    if (filter === 'video') return item.type === 'video';
+    if (filter === 'video') {
+      return item.type === 'video' && !(item.imageUrl && item.imageUrl.includes('/shorts/'));
+    }
+    if (filter === 'short') {
+      return item.type === 'video' && item.imageUrl && item.imageUrl.includes('/shorts/');
+    }
     return true;
   });
 
@@ -90,7 +95,8 @@ const GalleryContent = () => {
           <div className="flex flex-wrap justify-center gap-3 md:gap-4 mb-10 md:mb-16">
             {[
               { id: 'image', label: 'Images' },
-              { id: 'video', label: 'Videos' }
+              { id: 'video', label: 'Videos' },
+              { id: 'short', label: 'Shorts' }
             ].map((f) => (
               <button
                 key={f.id}

@@ -204,7 +204,7 @@ const ManageGallery = () => {
                   onClick={() => { setMediaType('video'); setIsUpload(false); }}
                   className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${mediaType === 'video' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500'}`}
                 >
-                  Video
+                  Video / Short
                 </button>
               </div>
             </div>
@@ -321,7 +321,14 @@ const ManageGallery = () => {
             <div key={item._id} className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden group hover:shadow-md transition-all">
               <div className="aspect-video relative overflow-hidden bg-gray-100">
                 <img
-                  src={item.imageUrl}
+                  src={
+                    item.type === 'video' 
+                      ? (item.coverImage || (() => {
+                          const ytMatch = item.imageUrl?.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/|v\/))([^?&]+)/);
+                          return ytMatch ? `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg` : 'https://via.placeholder.com/300x200?text=Video';
+                        })())
+                      : item.imageUrl
+                  }
                   alt={item.title}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
