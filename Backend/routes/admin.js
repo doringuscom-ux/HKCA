@@ -45,13 +45,55 @@ const uploadToCloudinary = (fileBuffer, folder = 'hkca', resourceType = 'auto') 
 
 // --- Gallery Routes ---
 
+let youtubeCache = {
+  data: [],
+  lastFetch: 0
+};
+
 // @desc    Get all gallery items
 // @route   GET /api/admin/gallery
 // @access  Public
 router.get('/gallery', async (req, res) => {
   try {
-    const galleryItems = await Gallery.find().sort({ createdAt: -1 });
-    res.json(galleryItems);
+    const dbItems = await Gallery.find().sort({ createdAt: -1 });
+
+    // Fetch from YouTube (cache for 1 hour)
+    const CACHE_DURATION = 60 * 60 * 1000;
+    if (Date.now() - youtubeCache.lastFetch > CACHE_DURATION) {
+      try {
+        const list = await yts({ search: 'HKCA Haryana Canoeing', pages: 1 });
+        const channelVideos = list.videos.filter(v => v.author && v.author.name && v.author.name.includes('HKCA'));
+        const videosToSync = channelVideos.length > 0 ? channelVideos : list.videos.slice(0, 10);
+
+        youtubeCache.data = videosToSync.map(v => ({
+          _id: 'yt_' + v.videoId, // Create a fake object ID so React doesn't complain about keys
+          title: v.title,
+          imageUrl: v.url,
+          category: 'General',
+          type: 'video',
+          source: 'youtube',
+          createdAt: new Date().toISOString()
+        }));
+        youtubeCache.lastFetch = Date.now();
+      } catch (err) {
+        console.error('Failed to fetch live youtube videos', err);
+        // If it fails, keep old cache
+      }
+    }
+
+    // Merge DB items with YouTube live items (avoiding duplicates based on video ID)
+    const dbVideoUrls = dbItems.map(item => item.imageUrl || '');
+    const uniqueYoutubeVideos = youtubeCache.data.filter(yt => {
+      // Check if DB already has this video
+      return !dbVideoUrls.some(dbUrl => dbUrl.includes(yt.imageUrl.split('?v=')[1] || yt.imageUrl.split('.be/')[1]));
+    });
+
+    const allItems = [...dbItems, ...uniqueYoutubeVideos];
+
+    // Sort combined items by createdAt
+    allItems.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    res.json(allItems);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -66,6 +108,13 @@ router.post('/gallery', protect, adminGuard, upload.single('image'), async (req,
   try {
     let finalImageUrl = imageUrl;
     let cloudinaryId = '';
+
+    if (type === 'video' && imageUrl) {
+      const exists = await Gallery.findOne({ imageUrl });
+      if (exists) {
+        return res.status(400).json({ message: 'This video is already in the gallery!' });
+      }
+    }
 
     if (isUpload === 'true' && req.file) {
       const result = await uploadToCloudinary(req.file.buffer);
@@ -88,52 +137,7 @@ router.post('/gallery', protect, adminGuard, upload.single('image'), async (req,
   }
 });
 
-// @desc    Sync gallery items from YouTube channel
-// @route   POST /api/admin/gallery/sync-youtube
-// @access  Private
-router.post('/gallery/sync-youtube', protect, adminGuard, async (req, res) => {
-  try {
-    // Search for the channel's recent videos using yt-search
-    const list = await yts({ search: 'HKCA Haryana Canoeing', pages: 1 });
-    
-    // Filter out videos that are actually from the HKCA channel
-    // In case search returns other channels, though yt-search usually ranks exact name matches high
-    const channelVideos = list.videos.filter(v => v.author && v.author.name && v.author.name.includes('HKCA'));
-    
-    // If filtering by author name returns empty, fallback to the top 10 search results
-    const videosToSync = channelVideos.length > 0 ? channelVideos : list.videos.slice(0, 10);
-    
-    let addedCount = 0;
-    
-    for (const item of videosToSync) {
-      const videoId = item.videoId;
-      const videoUrl = item.url;
-      
-      // Check if video already exists in the gallery
-      const exists = await Gallery.findOne({ 
-        $or: [
-          { imageUrl: { $regex: videoId, $options: 'i' } },
-          { title: item.title }
-        ]
-      });
-      
-      if (!exists) {
-        await Gallery.create({
-          title: item.title,
-          imageUrl: videoUrl,
-          category: 'General',
-          type: 'video',
-        });
-        addedCount++;
-      }
-    }
-    
-    res.json({ message: `Successfully synced ${addedCount} new videos from YouTube.` });
-  } catch (error) {
-    console.error('YouTube sync error:', error);
-    res.status(500).json({ message: 'Failed to sync with YouTube.' });
-  }
-});
+
 
 // @desc    Delete a gallery item
 // @route   DELETE /api/admin/gallery/:id
@@ -1157,13 +1161,13 @@ router.patch('/inquiries/:id/status', protect, async (req, res) => {
     );
 
     if (!inquiry) return res.status(404).json({ message: 'Inquiry not found' });
-    
+
     // Send email when status is updated to 'archived' (resolved)
     if (status === 'archived' && inquiry.email) {
       // Fire and forget, or await it
       sendResolutionEmail(inquiry.email, inquiry.name);
     }
-    
+
     res.json(inquiry);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -1197,7 +1201,7 @@ router.put('/document-verifications/:id/status', protect, adminGuard, async (req
       { status },
       { new: true }
     ).populate('user', 'username email personalInfo');
-    
+
     if (!verification) {
       return res.status(404).json({ message: 'Verification not found' });
     }

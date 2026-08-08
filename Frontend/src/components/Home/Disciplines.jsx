@@ -10,12 +10,12 @@ import img7 from '../../assets/Home/Highlights/7.png';
 
 const Disciplines = () => {
   const disciplines = [
-    { name: "CANOE SPRINT", desc: "Speed. Power. Precision.", img: img1, link: "/disciplines/canoe-sprint" },
+    { name: "CANOE SPRINT", desc: "Speed. Power. Precision.", img: "https://res.cloudinary.com/dyfkf3vic/image/upload/v1775892115/hkca/assets/n4boksb44ammoowfzgg7.jpg", link: "/disciplines/canoe-sprint" },
     { name: "CANOE SLALOM", desc: "Technical. Turbulent. Thrilling.", img: img2, link: "/disciplines/canoe-slalom-kayak-cross" },
     { name: "PARACANOE", desc: "Inclusive. Resilient. Elite.", img: img3, link: "/disciplines/paracanoe" },
-    { name: "DRAGON BOAT", desc: "Teamwork. Heritage. Pulse.", img: img4, link: "/disciplines/dragon-boat" },
+    { name: "DRAGON BOAT", desc: "Teamwork. Heritage. Pulse.", img: "https://res.cloudinary.com/dyfkf3vic/image/upload/v1775892113/hkca/assets/qj9hdj57esdmhyxetxlf.jpg", link: "/disciplines/dragon-boat" },
     { name: "CANOE MARATHON", desc: "Endurance. Strategy. Stamina.", img: img5, link: "/disciplines/canoe-marathon" },
-    { name: "CANOE POLO", desc: "Dynamic. Contact. Competitive.", img: img6, link: "/disciplines/canoe-polo" },
+    { name: "CANOE POLO", desc: "Dynamic. Contact. Competitive.", img: "https://res.cloudinary.com/dyfkf3vic/image/upload/v1775892114/hkca/assets/paabqefyn1kvfevowvd7.jpg", link: "/disciplines/canoe-polo" },
     { name: "STAND UP PADDLING", desc: "Balance. Core. Nature.", img: img7, link: "/disciplines/stand-up-paddling" },
     { name: "WILDWATER", desc: "Untamed. Rapid. Fearless.", img: img2, link: "/disciplines/wildwater-canoeing" }
   ];
